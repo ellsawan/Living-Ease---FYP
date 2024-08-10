@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import commonStyles from '../constants/styles';
 import Colors from '../constants/Colors';
 import Fonts from '../constants/Font';
 
-const SelectRoleScreen = ({navigation}) => {
+const SelectRoleScreen = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState('');
 
   const handleRoleSelect = role => {
@@ -14,7 +14,7 @@ const SelectRoleScreen = ({navigation}) => {
 
   const handleContinue = () => {
     if (selectedRole) {
-      navigation.navigate('SignUpScreen', {role: selectedRole});
+      navigation.navigate('SignUpScreen', { role: selectedRole });
     }
   };
 
@@ -51,7 +51,7 @@ const SelectRoleScreen = ({navigation}) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={getCardStyle('Service Provider')}
-          onPress={() => handleRoleSelect('Service Provider')}>
+          onPress={() => handleRoleSelect('ServiceProvider')}>
           <MaterialCommunityIcons
             name="tools"
             size={40}
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,

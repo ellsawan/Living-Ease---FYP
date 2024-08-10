@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import commonStyles from '../constants/styles';
 import Colors from '../constants/Colors';
 import fonts from '../constants/Font';
+import apiClient from '../../../../apiClient'; // Make sure to import your api client
 
 const SignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -16,26 +17,43 @@ const SignInScreen = ({ navigation }) => {
       setError('Please enter email and password');
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      // Add your sign in logic here
-      console.log('Sign in button pressed');
-      // If sign in is successful, navigate to the next screen
-      navigation.navigate('HomeScreen');
+      // Perform sign-in logic here and get user role
+      const response = await apiClient.post('/auth/login', {
+        email,
+        password,
+      });
+  
+      const { role } = response.data; // Assuming the response contains the user's role
+  
+      // Navigate to the appropriate dashboard based on the role
+      switch (role) {
+        case 'Landlord':
+          navigation.navigate('LandlordDashboard');
+          break;
+        case 'ServiceProvider':
+          navigation.navigate('ServiceProviderDashboard');
+          break;
+        case 'Tenant':
+          navigation.navigate('TenantDashboard');
+          break;
+  
+      }
     } catch (error) {
-      setError('Invalid email or password');
-    } finally {
+      
+      console.error(error.response?.data || error.message);
+       } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <View style={commonStyles.container}>
-      <Image
-        source={require('../main/assets/images/sign-in.png')}
-      />
+      <Image source={require('../main/assets/images/sign-in.png')} />
       <Text style={commonStyles.title}>Sign In</Text>
 
       <View style={commonStyles.inputContainer}>
