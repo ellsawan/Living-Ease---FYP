@@ -11,7 +11,7 @@ const generateToken = (id) => {
 };
 
 exports.registerUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { firstName,lastName, email, password, role } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -21,7 +21,8 @@ exports.registerUser = async (req, res) => {
     }
 
     const user = await User.create({
-      name,
+      firstName,
+      lastName,
       email,
       password,
       role,
@@ -29,7 +30,8 @@ exports.registerUser = async (req, res) => {
 
     res.status(201).json({
       _id: user._id,
-      name: user.name,
+      firstName: user. firstName,
+      lastName: user.lastName,
       email: user.email,
       role: user.role,
       token: generateToken(user._id),
@@ -56,7 +58,8 @@ exports.loginUser = async (req, res) => {
 
     res.status(200).json({
       _id: user._id,
-      name: user.name,
+      firstName: user. firstName,
+      lastName: user.lastName,
       email: user.email,
       role: user.role,
       token: generateToken(user._id),

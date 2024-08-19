@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
-  name: {
+  firstName: {
+    type: String,
+    required: true,
+  },
+  lastName: {
     type: String,
     required: true,
   },
@@ -25,6 +29,14 @@ const UserSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now,
+  },
+  contactNumber: {
+    type: String, // You can use String or Number depending on your use case
+    required: false, // Set to `true` if you want to make it required
+  },
+  profileImage: {
+    publicId: { type: String },
+    url: { type: String },
   },
 });
 

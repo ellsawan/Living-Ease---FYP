@@ -6,7 +6,7 @@ const Colors = {
   gray: '#ECECEC',
   lightgrey: '#F5F4F8',
   darkText: '#53587A',
-  placeholdertext: '#A1A5C1',
+  placeholdertext: '#B0B0B0',
   green: '#8BC83F', 
   background: '#fff',
   primary: '#8BC83F',

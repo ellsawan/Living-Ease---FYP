@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "android",
+			"path": "FrontEnd/LivingEase",
+			"problemMatcher": [],
+			"label": "npm: android - FrontEnd/LivingEase",
+			"detail": "react-native run-android"
+		}
+	]
+}

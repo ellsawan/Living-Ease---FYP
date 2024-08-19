@@ -43,7 +43,8 @@ const commonStyles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 10,
     paddingHorizontal: 10,
-    width: '100%', // Ensure full width
+    width: '100%',
+    color:Colors.darkText, // Ensure full width
   },
   inputField: {
     flex: 1,
@@ -78,8 +79,8 @@ const commonStyles = StyleSheet.create({
     alignSelf: 'center', // Center the button horizontally
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
     elevation: 5, // for Android
   },
   buttonText: {
