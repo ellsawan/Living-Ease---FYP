@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,44 @@ import {
   Image,
   Alert,
   StyleSheet,
-  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import commonStyles from '../../constants/styles';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import fonts from '../../constants/Font';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import apiClient from '../../../../../apiClient';
 
 const EditProfileScreen = ({ navigation }) => {
   const [contactNumber, setContactNumber] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Fetch user data when the component mounts
+    const fetchUserData = async () => {
+      try {
+        const response = await apiClient.get('user/userData');
+        const userData = response.data;
+        setFirstName(userData.firstName);
+        setLastName(userData.lastName);
+        setEmail(userData.email);
+        setContactNumber(userData.contactNumber);
+        setProfileImage(userData.profileImage);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setError('Failed to load user data');
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleImagePicker = () => {
     const options = {
@@ -34,7 +57,6 @@ const EditProfileScreen = ({ navigation }) => {
     };
 
     launchImageLibrary(options, response => {
-      console.log('Image Picker response:', response);
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.errorCode) {
@@ -55,8 +77,6 @@ const EditProfileScreen = ({ navigation }) => {
     };
 
     launchCamera(options, response => {
-      console.log('Camera response:', response);
-
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.errorCode) {
@@ -81,55 +101,67 @@ const EditProfileScreen = ({ navigation }) => {
       { cancelable: true }
     );
   };
-
-  const handleSave = () => {
-    console.log('Saving profile with:', {
-      firstName,
-      lastName,
-      contactNumber,
-      profileImage,
-    });
-    Alert.alert('Success', 'Profile updated successfully!');
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+  
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('firstName', firstName);
+      formData.append('lastName', lastName);
+      formData.append('contactNumber', contactNumber);
+      formData.append('email', email);
+  
+      // Add image if available
+      if (profileImage) {
+        formData.append('image', {
+          uri: profileImage,
+          type: 'image/jpeg', // Adjust based on image type
+          name: 'profile-image.jpg', // Or use the actual file name
+        });
+      }
+  
+      // Send the data to the backend
+      const response = await apiClient.put('user/updateUserData', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      // Check for successful response
+      if (response.status === 200) {
+        Alert.alert('Success', 'Profile updated successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to update profile');
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message === 'Email is already in use') {
+        Alert.alert('Error', 'This email is already in use. Please use another email.');
+      } else {
+        Alert.alert('Error', 'Failed to update profile');
+        
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) {
-    return <ActivityIndicator size="large" color={Colors.primary} />;
-  }
-
-  if (error) {
-    return <Text style={styles.errorText}>{error}</Text>;
-  }
-
   return (
-    <View style={commonStyles.container}>
-      <Text style={commonStyles.title}>Edit Your Profile</Text>
-
-      <View style={styles.imageContainer}>
-        <TouchableOpacity style={styles.imagePickerContainer} onPress={() => {}}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-          ) : (
-            <Icon name="account-circle" size={100} color={Colors.dark} />
-          )}
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.profileContainer}>
+        <TouchableOpacity onPress={handleImageSourceSelection}>
+          <Image source={{ uri: profileImage }} style={styles.profilePicture} />
+          <TouchableOpacity style={styles.cameraButton} onPress={handleImageSourceSelection}>
+            <Icon name="camera" size={20} color={Colors.white} />
+          </TouchableOpacity>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleImageSourceSelection} style={styles.cameraButton}>
-          <Icon name="camera" size={20} color={Colors.white} />
-        </TouchableOpacity>
+        <Text style={styles.name}>{firstName} {lastName}</Text>
       </View>
-
-      <Text style={styles.nameText}>
-        {firstName} {lastName}
-      </Text>
 
       <View style={commonStyles.inputContainer}>
         <Text style={commonStyles.inputTitle}>First Name</Text>
         <View style={commonStyles.inputWrapper}>
-          <Icon
-            name="account"
-            size={20}
-            color={Colors.dark}
-            style={commonStyles.icon}
-          />
+          <Icon name="account" size={20} color={Colors.dark} style={commonStyles.icon} />
           <TextInput
             style={[commonStyles.inputField, { flex: 1 }]}
             placeholder="First Name"
@@ -142,12 +174,7 @@ const EditProfileScreen = ({ navigation }) => {
 
         <Text style={commonStyles.inputTitle}>Last Name</Text>
         <View style={commonStyles.inputWrapper}>
-          <Icon
-            name="account"
-            size={20}
-            color={Colors.dark}
-            style={commonStyles.icon}
-          />
+          <Icon name="account" size={20} color={Colors.dark} style={commonStyles.icon} />
           <TextInput
             style={[commonStyles.inputField, { flex: 1 }]}
             placeholder="Last Name"
@@ -158,14 +185,25 @@ const EditProfileScreen = ({ navigation }) => {
           />
         </View>
 
+        <Text style={commonStyles.inputTitle}>Email</Text>
+        <View style={commonStyles.inputWrapper}>
+          <Icon name="email" size={20} color={Colors.dark} style={commonStyles.icon} />
+          <TextInput
+            style={[commonStyles.inputField, { flex: 1 }]}
+            placeholder="Email"
+            placeholderTextColor={Colors.placeholdertext}
+            onChangeText={setEmail}
+            value={email}
+            keyboardType="email-address"
+          />
+          {error && error.email && (
+    <Text style={{ color: 'red', fontSize: 12 }}>{error.email}</Text>
+  )}
+        </View>
+        
         <Text style={commonStyles.inputTitle}>Contact Number</Text>
         <View style={commonStyles.inputWrapper}>
-          <Icon
-            name="phone"
-            size={20}
-            color={Colors.dark}
-            style={commonStyles.icon}
-          />
+          <Icon name="phone" size={20} color={Colors.dark} style={commonStyles.icon} />
           <TextInput
             style={[commonStyles.inputField, { flex: 1 }]}
             placeholder="Contact Number"
@@ -180,46 +218,40 @@ const EditProfileScreen = ({ navigation }) => {
       <TouchableOpacity style={commonStyles.button} onPress={handleSave}>
         <Text style={commonStyles.buttonText}>Save Changes</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  imageContainer: {
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    marginBottom: 10,
-    position: 'relative',
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#fff',
+    padding: 20,
   },
-  imagePickerContainer: {
+  profileContainer: {
     alignItems: 'center',
+    marginBottom: 20,
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  profilePicture: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 2,
+    borderColor: Colors.primary,
   },
   cameraButton: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: 5,
+    right: 5,
     backgroundColor: Colors.primary,
     borderRadius: 25,
     padding: 10,
-    elevation: 5,
   },
-  nameText: {
+  name: {
     marginTop: 10,
-    fontSize: 18,
+    fontSize: 26,
     fontFamily: fonts.bold,
-    color: Colors.green,
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
-    textAlign: 'center',
+    color: Colors.blue,
   },
 });
 

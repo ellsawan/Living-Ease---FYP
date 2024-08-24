@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
@@ -19,35 +21,116 @@ const SettingsScreen = () => {
   const [profilePicture, setProfilePicture] = useState('https://via.placeholder.com/150');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigation = useNavigation();
-  
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          // Fetch profile image
+          try {
+            const profileImageResponse = await apiClient.get('/user/profile-image', {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (profileImageResponse.status === 200 && profileImageResponse.data.profileImageUrl) {
+              setProfilePicture(profileImageResponse.data.profileImageUrl);
+            } else {
+              setProfilePicture('https://via.placeholder.com/150');
+            }
+          } catch (profileImageError) {
+            console.log('Error fetching profile image:', profileImageError);
+            setProfilePicture('https://via.placeholder.com/150');
+          }
+
+          // Fetch user name
+          try {
+            const nameResponse = await apiClient.get('/user/name', {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (nameResponse.status === 200) {
+              setFirstName(nameResponse.data.firstName || '');
+              setLastName(nameResponse.data.lastName || '');
+            } else {
+              setError('Failed to fetch user name');
+            }
+          } catch (nameError) {
+            console.error('Error fetching user name:', nameError);
+            setError('Failed to fetch user name');
+          }
+        } else {
+          setError('No token found');
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('An error occurred while fetching data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={Colors.primary} />;
+  }
+
+  if (error) {
+    return <Text style={styles.errorText}>{error}</Text>;
+  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await apiClient.post('auth/logout');
+      if (response.status === 200) {
+        console.log('Logged out successfully!');
+        await AsyncStorage.removeItem('token');
+        navigation.navigate('SignInScreen');
+      } else {
+        console.log('Error logging out:', response.status);
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   const uploadImage = async (image) => {
     const formData = new FormData();
-  formData.append("image", {
-    uri: image.uri,
-    type: mime.getType(image.uri),
-    name: image.uri.split("/").pop(),
-  });
-  
+    formData.append("image", {
+      uri: image.uri,
+      type: mime.getType(image.uri),
+      name: image.uri.split("/").pop(),
+    });
+
     try {
-      const response = await apiClient.post('/upload-profile-image', formData, {
+      const response = await apiClient.post('user/upload-profile-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
       if (response.status === 201) {
         console.log('Image uploaded successfully!');
-        setProfilePicture(response.data.data.profileImage.url);
+        setProfilePicture(response.data.url);
       } else {
         console.log('Error uploading image:', response.status);
-        console.log('Error response:', response.data);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      console.error('Error response:', error.response);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
     }
   };
+
   const handleEditProfile = () => {
     navigation.navigate('CommonNavigator', {
       screen: 'EditProfileScreen',
@@ -59,7 +142,7 @@ const SettingsScreen = () => {
       mediaType: 'photo',
       quality: 1,
     };
-  
+
     launchImageLibrary(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
@@ -67,19 +150,19 @@ const SettingsScreen = () => {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else if (response.assets && response.assets.length > 0) {
         const image = response.assets[0];
-        uploadImage(image); // Call the uploadImage function here
+        uploadImage(image);
         setProfilePicture(image.uri);
       }
     });
   };
-  
+
   const handleCamera = () => {
     const options = {
       mediaType: 'photo',
       quality: 1,
       saveToPhotos: true,
     };
-  
+
     launchCamera(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
@@ -87,13 +170,12 @@ const SettingsScreen = () => {
         console.log('Camera Error: ', response.errorMessage);
       } else if (response.assets && response.assets.length > 0) {
         const image = response.assets[0];
-        uploadImage(image); // Call the uploadImage function here
+        uploadImage(image);
         setProfilePicture(image.uri);
       }
     });
   };
 
-  
   const handleImageSourceSelection = () => {
     Alert.alert(
       'Select Image Source',
@@ -139,7 +221,7 @@ const SettingsScreen = () => {
           <Text style={styles.optionText}>Notifications</Text>
           <Icon name="chevron-right" size={26} color={Colors.blue} style={styles.arrowIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => console.log('Logout')}>
+        <TouchableOpacity style={styles.option} onPress={handleLogout}>
           <Icon style={styles.icon} name="logout" size={26} color={Colors.primary} />
           <Text style={styles.optionText}>Logout</Text>
           <Icon name="chevron-right" size={26} color={Colors.blue} style={styles.arrowIcon} />
@@ -165,20 +247,21 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   profilePicture: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginTop: 20,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    marginTop: 30,
+    marginBottom: 10,
     borderWidth: 2,
     borderColor: Colors.primary,
   },
   cameraButton: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: 5,
+    right: 5,
     backgroundColor: Colors.primary,
     borderRadius: 25,
-    padding: 5,
+    padding: 10,
   },
   name: {
     marginTop: 10,
@@ -188,42 +271,47 @@ const styles = StyleSheet.create({
     color: Colors.blue,
   },
   editButtonContainer: {
-    flexDirection: 'row',
+    marginTop: 10,
     alignItems: 'center',
-    marginTop: 3,
+    flexDirection: 'row',
   },
   editButtonText: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontFamily: fonts.semiBold,
     color: Colors.primary,
-    marginRight: 10,
+    marginRight: 5,
   },
   editIcon: {
-    marginLeft: -5,
+    marginLeft: 5,
   },
   optionsContainer: {
-    flex: 1,
-    paddingVertical: 10,
+    marginTop: 20,
+    marginHorizontal: 20,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: Colors.lightgrey,
   },
   icon: {
-    marginRight: 15,
+    marginRight: 20,
   },
   optionText: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: fonts.bold,
     color: Colors.blue,
     flex: 1,
   },
   arrowIcon: {
     marginLeft: 'auto',
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

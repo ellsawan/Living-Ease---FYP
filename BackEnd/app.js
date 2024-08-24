@@ -10,6 +10,8 @@ const cloudinary = require('cloudinary').v2;
 
 dotenv.config();
 
+const app = express(); // Move this line up here
+
 connectDB();
 
 cloudinary.config({
@@ -17,8 +19,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
-const app = express();
 
 app.use(cors());
 app.use(express.json());

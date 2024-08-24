@@ -3,17 +3,21 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const {
   getName,
-  updateUserProfile,
-  getUserData,
+  uploadProfileImage,
+  uploadImageController,
+  getUserProfileImage,getUserData,updateUserProfile,
 } = require('../controllers/userController');
+// Route to get data for the currently authenticated user
+router.get('/userData', protect, getUserData);
+// Route to update user profile information, including profile image
+router.put('/updateUserData', protect, uploadProfileImage, updateUserProfile);
+// Route to upload a profile image
+router.post('/upload-profile-image', protect, uploadProfileImage, uploadImageController);
 
-// Route to get user name
+// Route to get the user's name
 router.get('/name', protect, getName);
 
-// Route to update user profile
-router.put('/profile/update', protect, updateUserProfile);
-
-// Route to get user data
-router.get('/profile', protect, getUserData);
+// Route to get the user's profile image
+router.get('/profile-image', protect, getUserProfileImage);
 
 module.exports = router;

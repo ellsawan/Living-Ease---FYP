@@ -5,6 +5,8 @@ import NotificationScreen from '../screens/common/NotificationScreen';
 import SettingsScreen from '../screens/common/SettingsScreen';
 import EditProfileScreen from '../screens/common/EditProfileScreen';
 import CustomHeaderBackButton from '../constants/customHeaderBackButton';
+import fonts from '../constants/Font';
+import Colors from '../constants/Colors';
 
 const Stack = createStackNavigator();
 
@@ -18,7 +20,13 @@ const CommonNavigator = () => {
         name="EditProfileScreen"
         component={EditProfileScreen}
         options={({ navigation }) => ({
-          headerTitle:'',
+          headerTitle:'Edit Profile',
+          headerTitleStyle: {
+            fontSize: 22,
+            marginTop:10, // Font size of the header title
+            color: Colors.blue, // Text color
+            fontFamily: fonts.bold, // Custom font if using a specific one
+          },
           headerLeft: () => (
             <CustomHeaderBackButton onPress={() => navigation.goBack()} />
           ),

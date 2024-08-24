@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const propertyController = require('../controllers/propertyController');
+const { addProperty, addPropertyController } = require('../controllers/propertyController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.get('/getproperties', propertyController.getAllProperties);
-router.get('/getproperty', propertyController.getPropertyById);
-router.post('/addproperties', propertyController.addProperty);
-router.put('/updateproperty', propertyController.updateProperty);
-router.delete('/deleteproperty', propertyController.deleteProperty);
+router.post('/addproperty', protect, addProperty, addPropertyController);
 
 module.exports = router;

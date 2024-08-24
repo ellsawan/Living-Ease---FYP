@@ -9,11 +9,19 @@ import {Alert,
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import {launchImageLibrary} from 'react-native-image-picker';
 import Colors from '../../../constants/Colors';
-import commonStyles from '../../../constants/styles';
 import fonts from '../../../constants/Font';
+import apiClient from '../../../../../../apiClient';
+import { useNavigation } from '@react-navigation/native';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import Location from './Locations';
+import commonStyles from '../../../constants/styles';
+import LocationComponent from './Locations';
+
 const AddProperty = () => {
+  const navigation = useNavigation();
   const [propertyCategory, setPropertyCategory] = useState('');
   const [city, setCity] = useState('');
   const [location, setLocation] = useState('');
@@ -33,10 +41,12 @@ const AddProperty = () => {
       Alert.alert('Image Limit Reached', 'You can only add up to 15 images.');
     }
   };
-  
+  const handleCityChange = (city) => {
+    setCity(city);
+  };
   const handlePropertyCategoryChange = category =>
     setPropertyCategory(category);
-  const handleCityChange = text => setCity(text);
+
   const handleLocationChange = text => setLocation(text);
   const handleAreaChange = text => setArea(text);
   const handleRentPriceChange = text => setRentPrice(text);
@@ -61,8 +71,65 @@ const AddProperty = () => {
 
   const handlePropertyTitleChange = text => setPropertyTitle(text);
   const handlePropertyDescriptionChange = text => setPropertyDescription(text);
-  const handleSubmit = () => {
-    console.log('Property listing created successfully!');
+  const handleSubmit = async () => {
+    if (
+      !propertyCategory ||
+      !city ||
+      !location ||
+      !area ||
+      !rentPrice ||
+      !bedrooms ||
+      !bathrooms ||
+      amenities.length === 0 ||
+      !propertyTitle ||
+      !propertyDescription ||
+      images.length === 0
+    ) {
+      Alert.alert('Validation Error', 'Please fill in all required fields and add at least one image.');
+      return; // Stop the function if validation fails
+    }
+  
+    const formData = new FormData();
+    formData.append('propertyCategory', propertyCategory);
+    formData.append('city', city);
+    formData.append('location', location);
+    formData.append('area', area);
+    formData.append('rentPrice', rentPrice);
+    formData.append('bedrooms', bedrooms);
+    formData.append('bathrooms', bathrooms);
+    amenities.forEach((amenity) => {
+      formData.append('amenities', amenity);
+    });
+    formData.append('propertyTitle', propertyTitle);
+    formData.append('propertyDescription', propertyDescription);
+    images.forEach((image) => {
+      formData.append('images', {
+        uri: image,
+        type: 'image/jpeg',
+        name: 'image.jpg',
+      });
+    });
+    amenities.forEach((amenity) => {
+      formData.append('amenities', amenity);
+    });
+    try {
+      const response = await apiClient.post('properties/addproperty', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      console.log(response.data);
+      // Show success alert
+      console.log(response.data);
+      Alert.alert('Success', 'Your property listing is now published.', [
+        { text: 'OK', onPress: () => navigation.navigate('ManageProperty') }, // Navigate to Home
+      ]);
+    } catch (error) {
+      console.error(error);
+      // Show error alert
+      Alert.alert('Error', 'There was a problem publishing your property listing. Please try again.');
+    }
   };
 
   const handleRemoveImage = index => {
@@ -97,16 +164,16 @@ const AddProperty = () => {
         {/* Property Category */}
         <Text style={commonStyles.inputTitle}>Property Category</Text>
         <View style={styles.selectionContainer}>
-          {/* Residential Categories */}
           {[
             'house',
             'flat',
             'upper portion',
             'lower portion',
+            'ground portion',
             'farm house',
             'room',
             'guest house',
-            'villa',
+            'villa', 'Office','Building','Shop',
           ].map(category => (
             <TouchableOpacity
               key={category}
@@ -123,17 +190,12 @@ const AddProperty = () => {
         
         </View>
 
-        {/* City */}
-        <View  >
-          <Text style={commonStyles.inputTitle}>City</Text>
-          <View style={commonStyles.inputWrapper} >
-          <TextInput
-            value={city}
-            onChangeText={handleCityChange}
-            style={commonStyles.inputField}
-          />
-        </View>
-        </View>
+    
+        <LocationComponent onSelectCity={(selectedCity) => {
+        setCity(selectedCity);
+        console.log('Selected city:', selectedCity);
+      }} />
+      
 
         {/* Location */}
         <View >
@@ -180,8 +242,10 @@ const AddProperty = () => {
           <View  style={commonStyles.inputWrapper}>
           <TextInput
             value={area}
+            placeholder="Enter Area of Property"
+              placeholderTextColor={Colors.placeholdertext}
             onChangeText={handleAreaChange}
-            
+
             keyboardType="numeric"
             style={commonStyles.inputField}
           />
@@ -239,11 +303,11 @@ const AddProperty = () => {
         <Text style={commonStyles.inputTitle}>Amenities</Text>
         <View style={styles.selectionContainer}>
           {[
-            'Car Parking',
+            'Parking',
             'Water Supply',
-            'CCTV camera',
-            'Separate Electricity Meter',
-            'Separate Gas Meter',
+            'CCTV Cameras','Wi-Fi',
+            'Electricity',
+            'Gas',
           ].map(amenity => (
             <TouchableOpacity
               key={amenity}
@@ -264,7 +328,8 @@ const AddProperty = () => {
           <TextInput
             value={propertyTitle}
             onChangeText={handlePropertyTitleChange}
-          
+            placeholder="Enter Property Title"
+            placeholderTextColor={Colors.placeholdertext}
             style={commonStyles.inputField}
           />
         </View>
@@ -277,6 +342,8 @@ const AddProperty = () => {
           <TextInput
             style={styles.descriptionField}
             value={propertyDescription}
+            placeholder="Enter Property Description"
+            placeholderTextColor={Colors.placeholdertext}
             onChangeText={handlePropertyDescriptionChange}
             multiline
             numberOfLines={10}
@@ -285,12 +352,14 @@ const AddProperty = () => {
       </View>
         {/* Rent Price */}
         <View >
-          <Text style={commonStyles.inputTitle}>Monthly Rent</Text>
+          <Text style={[commonStyles.inputTitle, { paddingTop: 10 }]}>Monthly Rent</Text>
           <View  style={commonStyles.inputWrapper}>
           <TextInput
             value={rentPrice}
             onChangeText={handleRentPriceChange}
             keyboardType="numeric"
+            placeholder="Enter Monthly Rent"
+            placeholderTextColor={Colors.placeholdertext}
             style={commonStyles.inputField}
           />
           <Text style={styles.fixedCurrency}>PKR</Text>
@@ -320,6 +389,8 @@ const styles = StyleSheet.create({
     height: 150, // Adjust height for multiline input
     paddingHorizontal: 10,
     paddingVertical: 10,
+    paddingTop:10,
+    paddingBottom:10,
     fontFamily: fonts.regular,
     fontSize: 16,
     borderRadius:10,
@@ -337,6 +408,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical:10,
     marginVertical: 10,
+    paddingTop:10,
     backgroundColor: Colors.lightgrey
   },
   button: {

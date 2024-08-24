@@ -3,16 +3,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const apiClient = axios.create({
   baseURL: 'http://10.0.2.2:5000/api',
+  timeout: 10000, // 10 second timeout
 });
 
 // Request interceptor to add the token to every request
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        console.log('Token retrieved:', token);
+        config.headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        console.error('No token found in storage');
+      }
+      return config;
+    } catch (error) {
+      console.error('Error retrieving token:', error);
+      return Promise.reject(error);
     }
-    return config;
   },
   (error) => Promise.reject(error)
 );
@@ -21,7 +30,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API error:', error.response?.data || error.message);
+    if (error.response && error.response.status === 401) {
+      console.error('Unauthorized request:', error.response.data);
+      // You could also log the user out here or take other actions
+    } else {
+      console.error('API error:', error.response?.data || error.message);
+    }
     return Promise.reject(error);
   }
 );

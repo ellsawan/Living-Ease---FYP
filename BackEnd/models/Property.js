@@ -1,13 +1,8 @@
-const mongoose = require('mongoose');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-
-const upload = multer({ dest: './uploads/' });
+const mongoose = require("mongoose");
 const propertySchema = new mongoose.Schema({
   propertyCategory: {
     type: String,
     required: true,
-    enum: ['house', 'flat', 'upper portion', 'lower portion', 'farm house', 'room', 'guest house', 'villa'],
   },
   city: {
     type: String,
@@ -33,12 +28,10 @@ const propertySchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  amenities: [
-    {
-      type: String,
-      enum: ['Car Parking', 'Water Supply', 'CCTV camera', 'Separate Electricity Meter', 'Separate Gas Meter'],
-    },
-  ],
+  amenities: {
+    type: [String],
+    required: false,
+  },
   propertyTitle: {
     type: String,
     required: true,
@@ -59,6 +52,6 @@ const propertySchema = new mongoose.Schema({
   },
 });
 
-const Property = mongoose.model('Property', propertySchema);
+const Property = mongoose.model("Property", propertySchema);
 
 module.exports = Property;
