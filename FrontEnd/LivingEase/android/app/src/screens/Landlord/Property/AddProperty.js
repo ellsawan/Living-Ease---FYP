@@ -1,415 +1,722 @@
-import React, {useState} from 'react';
-import {Alert,
+import React, {useState, useEffect} from 'react';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
+  TextInput,
   ScrollView,
   StyleSheet,
+  Modal,
+  FlatList,
   Image,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-import {launchImageLibrary} from 'react-native-image-picker';
+import commonStyles from '../../../constants/styles';
 import Colors from '../../../constants/Colors';
 import fonts from '../../../constants/Font';
+import {launchImageLibrary} from 'react-native-image-picker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import apiClient from '../../../../../../apiClient';
-import { useNavigation } from '@react-navigation/native';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import Location from './Locations';
-import commonStyles from '../../../constants/styles';
-import LocationComponent from './Locations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AddProperty = () => {
+const AddProperty = ({route}) => {
   const navigation = useNavigation();
-  const [propertyCategory, setPropertyCategory] = useState('');
-  const [city, setCity] = useState('');
-  const [location, setLocation] = useState('');
-  const [area, setArea] = useState('');
-  const [rentPrice, setRentPrice] = useState('');
-  const [bedrooms, setBedrooms] = useState('0');
-  const [bathrooms, setBathrooms] = useState('0');
-  const [amenities, setAmenities] = useState([]);
-  const [propertyTitle, setPropertyTitle] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [propertyType, setPropertyType] = useState('Residential');
+  const [location, setLocation] = useState(route.params?.location || '');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [propertyName, setPropertyName] = useState('');
   const [propertyDescription, setPropertyDescription] = useState('');
-  const [imageCount, setImageCount] = useState(0);
+  const [rentPrice, setRentPrice] = useState('');
+  const [bedrooms, setBedrooms] = useState(0);
+  const [bathrooms, setBathrooms] = useState(0);
+  const [propertySize, setPropertySize] = useState('');
+  const [sizeUnit, setSizeUnit] = useState('Marla');
+  const [showSizeUnitDropdown, setShowSizeUnitDropdown] = useState(false);
+  const [features, setFeatures] = useState([]);
+  const [contactNumber, setContactNumber] = useState('');
   const [images, setImages] = useState([]);
-  const handleAddImage = () => {
-    if (images.length < 15) {
-      handleSelectImage();
-    } else {
-      Alert.alert('Image Limit Reached', 'You can only add up to 15 images.');
+  const {address = 'Select Location on Maps'} = route?.params || {};
+  const [locationLatLng, setLocationLatLng] = useState({
+    type: 'Point',
+    coordinates: [0, 0],
+  });
+  const contactNumberRegex = /^\+92\d{10}$/;
+  useEffect(() => {
+    if (route.params?.locationLatLng) {
+      setLocationLatLng(route.params.locationLatLng);
+    }
+  }, [route.params?.locationLatLng, route.params?.address]);
+
+  const getUserId = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (userId !== null) {
+        return userId;
+      } else {
+        throw new Error('User ID not found');
+      }
+    } catch (error) {
+      console.error('Error retrieving user ID:', error);
+      throw error;
     }
   };
-  const handleCityChange = (city) => {
-    setCity(city);
-  };
-  const handlePropertyCategoryChange = category =>
-    setPropertyCategory(category);
-
-  const handleLocationChange = text => setLocation(text);
-  const handleAreaChange = text => setArea(text);
-  const handleRentPriceChange = text => setRentPrice(text);
-  const handleIncrement = setter => {
-    setter(prev => String(parseInt(prev) + 1));
-  };
-
-  const handleDecrement = setter => {
-    setter(prev => {
-      const newValue = parseInt(prev) - 1;
-      return newValue < 0 ? '0' : String(newValue);
-    });
-  };
-
-  const handleAmenitiesChange = amenity => {
-    setAmenities(prevAmenities =>
-      prevAmenities.includes(amenity)
-        ? prevAmenities.filter(item => item !== amenity)
-        : [...prevAmenities, amenity],
-    );
-  };
-
-  const handlePropertyTitleChange = text => setPropertyTitle(text);
-  const handlePropertyDescriptionChange = text => setPropertyDescription(text);
   const handleSubmit = async () => {
+    setLoading(true);
+    
     if (
-      !propertyCategory ||
-      !city ||
-      !location ||
-      !area ||
-      !rentPrice ||
-      !bedrooms ||
-      !bathrooms ||
-      amenities.length === 0 ||
-      !propertyTitle ||
+      !propertyType ||
+      !selectedCategory ||
+      !address ||
+      !propertyName ||
       !propertyDescription ||
-      images.length === 0
+      !rentPrice ||
+      !propertySize ||
+      !sizeUnit ||
+      !contactNumber
     ) {
-      Alert.alert('Validation Error', 'Please fill in all required fields and add at least one image.');
-      return; // Stop the function if validation fails
+      setLoading(false);
+      alert('Please fill in all fields');
+      return;
     }
   
-    const formData = new FormData();
-    formData.append('propertyCategory', propertyCategory);
-    formData.append('city', city);
-    formData.append('location', location);
-    formData.append('area', area);
-    formData.append('rentPrice', rentPrice);
-    formData.append('bedrooms', bedrooms);
-    formData.append('bathrooms', bathrooms);
-    amenities.forEach((amenity) => {
-      formData.append('amenities', amenity);
-    });
-    formData.append('propertyTitle', propertyTitle);
-    formData.append('propertyDescription', propertyDescription);
-    images.forEach((image) => {
-      formData.append('images', {
-        uri: image,
-        type: 'image/jpeg',
-        name: 'image.jpg',
-      });
-    });
-    amenities.forEach((amenity) => {
-      formData.append('amenities', amenity);
-    });
     try {
-      const response = await apiClient.post('properties/addproperty', formData, {
+      const userId = await getUserId();
+      const formData = new FormData();
+  
+      images.forEach((image, index) => {
+        formData.append('images', {
+          uri: image.uri,
+          type: 'image/jpeg',
+          name: `image${index}.jpg`,
+        });
+      });
+  
+      formData.append('propertyType', propertyType);
+      formData.append('category', selectedCategory);
+      formData.append('location', address);
+      formData.append('propertyName', propertyName);
+      formData.append('propertyDescription', propertyDescription);
+      formData.append('rentPrice', rentPrice);
+  
+      if (propertyType === 'Residential') {
+        formData.append('bedrooms', bedrooms);
+        formData.append('bathrooms', bathrooms);
+      }
+  
+      formData.append('propertySize', propertySize);
+      formData.append('sizeUnit', sizeUnit);
+  
+      // Only append 'features' if it has values
+      if (features.length > 0) {
+        formData.append('features', JSON.stringify(features));
+      }
+  
+      formData.append('contactNumber', contactNumber);
+      formData.append('locationLatLng', JSON.stringify(locationLatLng));
+      formData.append('owner', userId);
+  
+      console.log('FormData:', formData);
+      
+      const response = await apiClient.post('/property', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
   
       console.log(response.data);
-      // Show success alert
-      console.log(response.data);
-      Alert.alert('Success', 'Your property listing is now published.', [
-        { text: 'OK', onPress: () => navigation.navigate('ManageProperty') }, // Navigate to Home
-      ]);
+      alert('Property added successfully!');
+      navigation.navigate('ManageProperty', { refresh: true });
     } catch (error) {
-      console.error(error);
-      // Show error alert
-      Alert.alert('Error', 'There was a problem publishing your property listing. Please try again.');
+      console.error('Error adding property:', error);
+      alert('Error adding property. Please try again.');
+    } finally {
+      setLoading(false); // Ensure loading state is reset
     }
+    
+  };
+  
+  
+
+  const handleIncrement = (setter, value) => {
+    setter(String(parseInt(value) + 1)); // Ensure value is a string
+  };
+  const handleDecrement = (setter, value) => {
+    const newValue = parseInt(value) - 1;
+    setter(String(newValue < 0 ? 0 : newValue)); // Ensure value is a string
+  };
+  const sizeUnits = ['Marla', 'Sq Ft', 'Sq M', 'Sq Yd', 'Kanal'];
+  const residentialCategories = [
+    'House',
+    'Flat',
+    'Lower Portion',
+    'Upper Portion',
+    'Room',
+    'Farm House',
+    'Guest House',
+    'Annexe',
+    'Basement',
+  ];
+  const commercialCategories = [
+    'Office',
+    'Shop',
+    'Warehouse',
+    'Building',
+    'Plaza',
+  ];
+  const featureOptions = [
+    'Parking',
+    'CCTV Camera',
+    'Electricity',
+    'Water Supply',
+    'Gas',
+    'Security',
+    'Internet Access',
+  ];
+  const handleRemoveImage = uri => {
+    setImages(images.filter(image => image.uri !== uri));
   };
 
-  const handleRemoveImage = index => {
-    setImages(images.filter((_, i) => i !== index));
-    setImageCount(imageCount - 1); // Update image count
-  };
-
-  const handleSelectImage = async () => {
+  const selectImage = () => {
     const options = {
-      mediaType: 'photo',
-      quality: 1,
-      selectionLimit: 15 - imageCount,
+      mediaType: 'photo', // Specify the type of media to pick (photo or video)
+      quality: 1, // Quality of the image (0 to 1)
+      selectionLimit: 0, // 0 means no limit, you can specify a number if you want to limit the selection
     };
 
     launchImageLibrary(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else {
-        const selectedImages = response.assets.map(asset => asset.uri);
-        setImages([...images, ...selectedImages]);
-        setImageCount(imageCount + selectedImages.length);
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        const newImages = response.assets.map(asset => ({uri: asset.uri}));
+        setImages(prevImages => [...prevImages, ...newImages]);
       }
     });
   };
 
-  return (
-    <ScrollView>
-      <View style={styles.formContainer}>
+  const renderCategories = () => {
+    const categories =
+      propertyType === 'Residential'
+        ? residentialCategories
+        : commercialCategories;
 
-        {/* Property Category */}
-        <Text style={commonStyles.inputTitle}>Property Category</Text>
-        <View style={styles.selectionContainer}>
-          {[
-            'house',
-            'flat',
-            'upper portion',
-            'lower portion',
-            'ground portion',
-            'farm house',
-            'room',
-            'guest house',
-            'villa', 'Office','Building','Shop',
-          ].map(category => (
+    return (
+      <View style={styles.categoriesContainer}>
+        {categories.map((category, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category && styles.selectedCategoryButton,
+            ]}
+            onPress={() => setSelectedCategory(category)}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              {category === 'House' && (
+                <Icon
+                  name="home"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Flat' && (
+                <Icon
+                  name="office-building"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Lower Portion' && (
+                <Icon
+                  name="home-outline"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Upper Portion' && (
+                <Icon
+                  name="home-outline"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Room' && (
+                <Icon
+                  name="bed"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Farm House' && (
+                <Icon
+                  name="home-modern"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Guest House' && (
+                <Icon
+                  name="home-variant-outline"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Annexe' && (
+                <Icon
+                  name="home-city"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Basement' && (
+                <Icon
+                  name="sitemap"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Office' && (
+                <Icon
+                  name="office-building"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Shop' && (
+                <Icon
+                  name="storefront"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Warehouse' && (
+                <Icon
+                  name="warehouse"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Building' && (
+                <Icon
+                  name="home-city"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              {category === 'Plaza' && (
+                <Icon
+                  name="office-building-outline"
+                  size={20}
+                  color={Colors.primary}
+                  style={{marginRight: 8}}
+                />
+              )}
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === category && styles.selectedCategoryText,
+                ]}>
+                {category}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const toggleFeature = feature => {
+    setFeatures(prevFeatures =>
+      prevFeatures.includes(feature)
+        ? prevFeatures.filter(f => f !== feature)
+        : [...prevFeatures, feature],
+    );
+  };
+
+  return (
+    <ScrollView horizontal={false} keyboardShouldPersistTaps="always">
+     {loading ? (
+      <ActivityIndicator size="large" color={Colors.primary} style={styles.loadingIndicator} />
+    ) : (
+        <View style={styles.formContainer}>
+          <Text style={commonStyles.inputTitle}>Property Type</Text>
+          <View style={styles.propertyTypeContainer}>
             <TouchableOpacity
-              key={category}
               style={[
-                styles.selectionButton,
-                propertyCategory === category && styles.selectedButton,
+                styles.propertyTypeButton,
+                propertyType === 'Residential' &&
+                  styles.selectedPropertyTypeButton,
               ]}
-              onPress={() => handlePropertyCategoryChange(category)}>
-              <Text style={styles.selectionButtonText}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+              onPress={() => {
+                setPropertyType('Residential');
+                setSelectedCategory(''); // Reset category when type changes
+              }}>
+              <Text
+                style={[
+                  styles.propertyTypeText,
+                  propertyType === 'Residential' &&
+                    styles.selectedPropertyTypeText,
+                ]}>
+                Residential
               </Text>
             </TouchableOpacity>
-          ))}
-        
-        </View>
-
-    
-        <LocationComponent onSelectCity={(selectedCity) => {
-        setCity(selectedCity);
-        console.log('Selected city:', selectedCity);
-      }} />
-      
-
-        {/* Location */}
-        <View >
-          
-          <Text style={commonStyles.inputTitle}>Location</Text>
-          <View style={commonStyles.inputWrapper} >
-          <TextInput
-            value={location}
-            onChangeText={handleLocationChange}
-            
-            style={commonStyles.inputField}
+            <TouchableOpacity
+              style={[
+                styles.propertyTypeButton,
+                propertyType === 'Commercial' &&
+                  styles.selectedPropertyTypeButton,
+              ]}
+              onPress={() => {
+                setPropertyType('Commercial');
+                setSelectedCategory(''); // Reset category when type changes
+              }}>
+              <Text
+                style={[
+                  styles.propertyTypeText,
+                  propertyType === 'Commercial' &&
+                    styles.selectedPropertyTypeText,
+                ]}>
+                Commercial
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: Colors.primary,
+              marginVertical: 10,
+            }}
           />
-        </View>
-        </View>
-{/* Property Images */}
-<Text style={commonStyles.inputTitle}>Property Images</Text>
-<View style={styles.imagesContainer}>
-  {/* Map through the images and display them */}
-  {images.map((image, index) => (
-    <View key={index} style={styles.imageContainer}>
-      <Image source={{ uri: image }} style={styles.image} />
-      <TouchableOpacity
-        style={styles.removeImageButton}
-        onPress={() => handleRemoveImage(index)}
-      >
-        <Icon name="close" size={16} color={Colors.white} />
-      </TouchableOpacity>
-    </View>
-  ))}
+          {renderCategories()}
 
-  {/* Always show the Add Image button */}
-  <TouchableOpacity
-    onPress={handleAddImage}
-    style={styles.addImageButton}
-  >
-    <Text style={styles.addImageButtonText}>+</Text>
-  </TouchableOpacity>
+          <View>
+            <Text style={commonStyles.inputTitle}>Location</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Location', {mode: 'add'})}
+              style={{
+                borderColor: Colors.primary,
+                borderWidth: 1,
+                borderRadius: 10,
+                padding: 10,
+                paddingHorizontal: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 10,
+              }}>
+              <Text
+                style={{
+                  color: Colors.darkText,
+                  fontSize: 16,
+                  fontFamily: fonts.semiBold,
+                }}>
+                {address}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={commonStyles.inputTitle}>Size</Text>
+          <View style={commonStyles.inputWrapper}>
+            <TextInput
+              style={commonStyles.inputField}
+              placeholder="Enter size"
+              keyboardType="numeric"
+              value={propertySize}
+              onChangeText={setPropertySize}
+            />
+            <View style={styles.sizeInputContainer}>
+              <Text style={styles.sizeUnitText}>{sizeUnit}</Text>
+              <TouchableOpacity onPress={() => setShowSizeUnitDropdown(true)}>
+                <Icon name="chevron-down" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {showSizeUnitDropdown && (
+              <Modal
+                transparent
+                visible={showSizeUnitDropdown}
+                animationType="fade"
+                onRequestClose={() => setShowSizeUnitDropdown(false)}>
+                <TouchableOpacity
+                  style={styles.modalOverlay}
+                  onPress={() => setShowSizeUnitDropdown(false)}>
+                  <View style={styles.sizeUnitDropdown}>
+                    <FlatList
+                      data={sizeUnits}
+                      keyExtractor={item => item}
+                      renderItem={({item}) => (
+                        <TouchableOpacity
+                          style={styles.sizeUnitOption}
+                          onPress={() => {
+                            setSizeUnit(item);
+                            setShowSizeUnitDropdown(false);
+                          }}>
+                          <Text style={styles.sizeUnitOptionText}>{item}</Text>
+                        </TouchableOpacity>
+                      )}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
+          </View>
+
+          <Text style={commonStyles.inputTitle}>Property Images</Text>
+          <TouchableOpacity
+            onPress={selectImage}
+            style={{
+              borderColor: Colors.primary,
+              borderWidth: 1,
+              borderRadius: 10,
+              padding: 10,
+              paddingHorizontal: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 10,
+            }}>
+            <Icon
+              name="upload"
+              size={20}
+              color={Colors.darkText}
+              style={{marginRight: 10, alignItems: 'center'}}
+            />
+            <Text
+              style={{
+                color: Colors.darkText,
+                fontSize: 16,
+                textAlign: 'center',
+                fontFamily: fonts.semiBold,
+              }}>
+              UPLOAD IMAGES
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.imagesContainer}>
+            {images.map((image, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{uri: image.uri}} style={styles.image} />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={() => handleRemoveImage(image.uri)}>
+                  <Icon name="close" size={16} color={Colors.white} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
+          <Text style={commonStyles.inputTitle}>Property Features</Text>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+            {featureOptions.map((feature, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.categoryButton,
+                  features.includes(feature) && styles.selectedCategoryButton,
+                ]}
+                onPress={() => toggleFeature(feature)}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  {feature === 'Parking' && (
+                    <Icon
+                      name="parking"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  {feature === 'CCTV Camera' && (
+                    <Icon
+                      name="cctv"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  {feature === 'Electricity' && (
+                    <Icon
+                      name="lightning-bolt"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  {feature === 'Water Supply' && (
+                    <Icon
+                      name="water-pump"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  {feature === 'Gas' && (
+                    <Icon
+                      name="gas-cylinder"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  {feature === 'Security' && (
+                    <Icon
+                      name="shield"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  {feature === 'Internet Access' && (
+                    <Icon
+                      name="wifi"
+                      size={20}
+                      color={Colors.primary}
+                      style={{marginRight: 8}}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      features.includes(feature) && styles.selectedCategoryText,
+                    ]}>
+                    {feature}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {propertyType === 'Residential' && (
+            <>
+              {/* Bedrooms */}
+              <View style={styles.featureInput}>
+                <Text style={commonStyles.inputTitle}>Bedrooms</Text>
+                <View style={styles.inputContainer}>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => handleDecrement(setBedrooms, bedrooms)}>
+                    <Text style={styles.buttonText}>-</Text>
+                  </TouchableOpacity>
+                  <TextInput
+                    value={bedrooms}
+                    onChangeText={setBedrooms}
+                    placeholder="Bedrooms"
+                    keyboardType="numeric"
+                    style={styles.shortInput}
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => handleIncrement(setBedrooms, bedrooms)}>
+                    <Text style={styles.buttonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Bathrooms */}
+              <View style={styles.featureInput}>
+                <Text style={commonStyles.inputTitle}>Bathrooms</Text>
+                <View style={styles.inputContainer}>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => handleDecrement(setBathrooms, bathrooms)}>
+                    <Text style={styles.buttonText}>-</Text>
+                  </TouchableOpacity>
+                  <TextInput
+                    value={bathrooms}
+                    onChangeText={setBathrooms}
+                    placeholder="Bathrooms"
+                    keyboardType="numeric"
+                    style={styles.shortInput}
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => handleIncrement(setBathrooms, bathrooms)}>
+                    <Text style={styles.buttonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
+          )}
+          <Text style={commonStyles.inputTitle}>Property Title</Text>
+          <View style={commonStyles.inputWrapper}>
+            <TextInput
+              style={commonStyles.inputField}
+              placeholder="Enter property title"
+              value={propertyName}
+              onChangeText={setPropertyName}
+            />
+          </View>
+
+          <Text style={commonStyles.inputTitle}>Property Description</Text>
+          <View style={commonStyles.inputWrapper}>
+            <TextInput
+              style={commonStyles.inputField}
+              placeholder="Enter property description"
+              multiline
+              numberOfLines={4}
+              value={propertyDescription}
+              onChangeText={setPropertyDescription}
+            />
+          </View>
+
+          <Text style={commonStyles.inputTitle}>Monthly Rent</Text>
+          <View style={commonStyles.inputWrapper}>
+            <TextInput
+              style={commonStyles.inputField}
+              placeholder="Enter rent price"
+              keyboardType="numeric"
+              value={rentPrice}
+              onChangeText={setRentPrice}
+            />
+          </View>
+          <Text style={commonStyles.inputTitle}>Contact Number</Text>
+<View style={commonStyles.inputWrapper}>
+  <TextInput
+    style={commonStyles.inputField}
+    placeholder="+92 3xxxxxxxxx"
+    keyboardType="phone-pad"
+    value={contactNumber}
+    maxLength={13} 
+    onChangeText={(text) => {
+      if (text.startsWith('+92')) {
+        if (contactNumberRegex.test(text)) {
+          setContactNumber(text);
+        } else {
+          setContactNumber(text.replace(/[^+0-9]/g, '')); // Remove any non-digit characters except for the plus sign
+        }
+      } else {
+        setContactNumber('+92' + text.replace(/[^0-9]/g, '')); // Add the +92 prefix and remove any non-digit characters
+      }
+    }}
+  />
 </View>
 
-
-        {/* Area in Marla */}
-        <View >
-          <Text style={commonStyles.inputTitle}>Area </Text>
-          <View  style={commonStyles.inputWrapper}>
-          <TextInput
-            value={area}
-            placeholder="Enter Area of Property"
-              placeholderTextColor={Colors.placeholdertext}
-            onChangeText={handleAreaChange}
-
-            keyboardType="numeric"
-            style={commonStyles.inputField}
-          />
-          <Text style={styles.fixedCurrency}>MARLA</Text>
+          <TouchableOpacity onPress={handleSubmit} style={commonStyles.button}>
+            <Text style={commonStyles.buttonText}>Submit</Text>
+          </TouchableOpacity>
         </View>
-        </View>
-        <View style={styles.featuresContainer}>
-          <View style={styles.featureInput}>
-            <Text style={commonStyles.inputTitle}>Bedrooms</Text>
-            <View style={styles.inputContainer}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => handleDecrement(setBedrooms)}>
-                <Text style={styles.buttonText}>-</Text>
-              </TouchableOpacity>
-              <TextInput
-                value={bedrooms}
-                onChangeText={setBedrooms}
-                placeholder="Bedrooms"
-                keyboardType="numeric"
-                style={styles.shortInput}
-              />
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => handleIncrement(setBedrooms)}>
-                <Text style={styles.buttonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.featureInput}>
-            <Text style={commonStyles.inputTitle}>Bathrooms</Text>
-            <View style={styles.inputContainer}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => handleDecrement(setBathrooms)}>
-                <Text style={styles.buttonText}>-</Text>
-              </TouchableOpacity>
-              <TextInput
-                value={bathrooms}
-                onChangeText={setBathrooms}
-                placeholder="Bathrooms"
-                keyboardType="numeric"
-                style={styles.shortInput}
-              />
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => handleIncrement(setBathrooms)}>
-                <Text style={styles.buttonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Amenities */}
-        <Text style={commonStyles.inputTitle}>Amenities</Text>
-        <View style={styles.selectionContainer}>
-          {[
-            'Parking',
-            'Water Supply',
-            'CCTV Cameras','Wi-Fi',
-            'Electricity',
-            'Gas',
-          ].map(amenity => (
-            <TouchableOpacity
-              key={amenity}
-              style={[
-                styles.selectionButton,
-                amenities.includes(amenity) && styles.selectedButton,
-              ]}
-              onPress={() => handleAmenitiesChange(amenity)}>
-              <Text style={styles.selectionButtonText}>{amenity.charAt(0).toUpperCase() + amenity.slice(1)}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Property Title */}
-        <View >
-          <Text style={commonStyles.inputTitle}>Property Title</Text>
-          <View  style={commonStyles.inputWrapper}>
-          <TextInput
-            value={propertyTitle}
-            onChangeText={handlePropertyTitleChange}
-            placeholder="Enter Property Title"
-            placeholderTextColor={Colors.placeholdertext}
-            style={commonStyles.inputField}
-          />
-        </View>
-        </View>
-
-        {/* Property Description */}
-        <View >
-          <Text style={commonStyles.inputTitle}>Property Description</Text>
-          <View style={commonStyles.descriptionWrapper} >
-          <TextInput
-            style={styles.descriptionField}
-            value={propertyDescription}
-            placeholder="Enter Property Description"
-            placeholderTextColor={Colors.placeholdertext}
-            onChangeText={handlePropertyDescriptionChange}
-            multiline
-            numberOfLines={10}
-          />
-        </View>
-      </View>
-        {/* Rent Price */}
-        <View >
-          <Text style={[commonStyles.inputTitle, { paddingTop: 10 }]}>Monthly Rent</Text>
-          <View  style={commonStyles.inputWrapper}>
-          <TextInput
-            value={rentPrice}
-            onChangeText={handleRentPriceChange}
-            keyboardType="numeric"
-            placeholder="Enter Monthly Rent"
-            placeholderTextColor={Colors.placeholdertext}
-            style={commonStyles.inputField}
-          />
-          <Text style={styles.fixedCurrency}>PKR</Text>
-        </View>
-        </View>
-
-        {/* Submit Button */}
-        <TouchableOpacity onPress={handleSubmit} style={commonStyles.button}>
-          <Text style={commonStyles.buttonText}>Publish</Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  descriptionWrapper: {
-    backgroundColor: Colors.lightgrey,
-    borderRadius: 25,
-    marginVertical: 10,
-    paddingHorizontal: 10,
-    width: '100%',
-    paddingBottom:10,
-    color: Colors.darkText, // Ensure full width
-  },
-  descriptionField: {
-    height: 150, // Adjust height for multiline input
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    paddingTop:10,
-    paddingBottom:10,
-    fontFamily: fonts.regular,
-    fontSize: 16,
-    borderRadius:10,
-    color: Colors.darkText,
-    backgroundColor: Colors.lightgrey,
-    textAlignVertical: 'top', // Align text to the top of the input field
-  },
- 
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    fontFamily:fonts.regular,
-    fontSize: 16,
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    paddingVertical:10,
-    marginVertical: 10,
-    paddingTop:10,
-    backgroundColor: Colors.lightgrey
+  formContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
   },
   button: {
     width: 40,
@@ -417,61 +724,120 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.blue,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    fontFamily:fonts.regular,
-  },
-  selectionButtonText:
-  {fontFamily:fonts.regular,
-    fontSize:16,
-    color:Colors.darkText,
+    borderRadius: 20,
+    flexDirection: 'row',
   },
   buttonText: {
-    fontFamily:fonts.regular,
-    fontSize: 25,
+    fontSize: 24,
     color: Colors.white,
   },
-  fixedCurrency: {
-    marginLeft: 8,
-    fontSize: 16,
-
-    fontFamily: fonts.semiBold,
-    color: Colors.placeholdertext,
+  propertyTypeContainer: {
+    flexDirection: 'row',
+    marginVertical: 8,
   },
-  shortInput: {
-    fontFamily:fonts.regular,
-    color:Colors.darkText,
+  propertyTypeButton: {
     flex: 1,
-    textAlign: 'center',
-    paddingVertical: 10,
-    
+    padding: 16,
+    marginHorizontal: 4,
+    borderColor: Colors.gray,
+    borderWidth: 2,
+    fontFamily: fonts.semiBold,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  formContainer: {
+  selectedPropertyTypeButton: {
+    borderColor: Colors.primary,
+    borderWidth: 2,
+    borderRadius: 10,
+  },
+  propertyTypeText: {
+    fontSize: 16,
+    color: Colors.blue,
+    fontFamily: fonts.bold,
+  },
+  selectedPropertyTypeText: {
+    color: Colors.blue,
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 2,
+    borderRadius: 10,
+  },
+  categoryButton: {
+    padding: 10,
+    margin: 5,
+    borderWidth: 2,
+    borderColor: Colors.gray,
+    borderRadius: 10,
+  },
+  selectedCategoryButton: {
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontFamily: fonts.semiBold,
+    color: Colors.blue,
+  },
+  selectedCategoryText: {
+    color: Colors.blue,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 8,
+  },
+  sizeInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  sizeInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  sizeUnitText: {
+    fontSize: 16,
+    fontFamily: fonts.semiBold,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  sizeUnitDropdown: {
+    width: '80%',
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
-    elevation: 2,
+    fontFamily: fonts.semiBold,
   },
-  selectionContainer: {
+  sizeUnitOption: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  sizeUnitOptionText: {
+    fontSize: 16,
+    fontFamily: fonts.semiBold,
+    color: Colors.blue,
+  },
+  inputContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  selectionButton: {
-    borderRadius: 10,
-    padding: 10,
-    margin: 5,
-    backgroundColor: Colors.lightgrey,
+  shortInput: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fonts.regular,
+    fontSize: 16,
+    color: Colors.darkText,
   },
-  
-  selectedButton: {
-    borderRadius: 10,
-    padding: 10,
-    margin: 5,
-    backgroundColor: Colors.lightgrey,
-    borderColor: Colors.primary,
-    borderWidth:2,
-  },
-  
   imagesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -485,19 +851,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#ccc',
   },
-  addImageButton: {
-    width: 100,
-    height: 100,
-    margin: 4,
-    borderRadius: 20,
-    backgroundColor: Colors.lightgrey,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addImageButtonText: {
-    fontSize: 40,
-    color: Colors.blue,
-  },
   removeImageButton: {
     position: 'absolute',
     top: 4,
@@ -506,7 +859,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     padding: 4,
   },
- 
 });
 
 export default AddProperty;

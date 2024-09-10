@@ -16,13 +16,13 @@ const SplashScreen = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <View style={[commonStyles.container, { backgroundColor: Colors.blue }]}>
+    <View style={[commonStyles.container, { backgroundColor: Colors.white }]}>
       <Image
         source={require('../../main/assets/images/logo.png')}
         style={{ width: 120, height: 120, resizeMode: 'contain' }}
       />
       <Text style={commonStyles.title}>
-        <Text style={{ color: Colors.white }}>Living</Text>
+        <Text style={{ color: Colors.blue}}>Living</Text>
         <Text style={{ color: Colors.primary }}>Ease</Text>
       </Text>
     </View>

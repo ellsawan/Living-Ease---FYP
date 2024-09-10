@@ -38,6 +38,8 @@ const UserSchema = new mongoose.Schema({
     publicId: { type: String },
     url: { type: String },
   },
+  resetPasswordOTP: String, // Field to store the OTP
+  resetPasswordExpires: Date, // Field to store OTP expiration time
 });
 
 

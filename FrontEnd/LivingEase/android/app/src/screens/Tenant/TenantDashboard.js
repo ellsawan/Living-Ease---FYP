@@ -1,10 +1,33 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+// TenantDashboard.js
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import TopBar from '../common/TopBar';
+import Greeting from '../common/Greeting';
+import SearchBar from './SearchBar'; // Import the SearchBar component
+import Colors from '../../constants/Colors';
 
-export default function TenantDashboard() {
+const TenantDashboard = () => {
   return (
-    <View>
-      <Text>TenantDashboard</Text>
-    </View>
-  )
-}
+    <View style={styles.container}>
+      <TopBar />
+      <Greeting />
+      <SearchBar/>
+    
+      </View>
+  
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: Colors.background,
+    flex: 1,
+  },
+  cardsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+});
+
+export default TenantDashboard;

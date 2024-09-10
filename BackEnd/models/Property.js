@@ -1,56 +1,92 @@
 const mongoose = require("mongoose");
-const propertySchema = new mongoose.Schema({
-  propertyCategory: {
-    type: String,
-    required: true,
-  },
-  city: {
-    type: String,
-    required: true,
-  },
-  location: {
-    type: String,
-    required: true,
-  },
-  area: {
-    type: Number, // In marla
-    required: true,
-  },
-  rentPrice: {
-    type: Number,
-    required: true,
-  },
-  bedrooms: {
-    type: Number,
-    default: 0,
-  },
-  bathrooms: {
-    type: Number,
-    default: 0,
-  },
-  amenities: {
-    type: [String],
-    required: false,
-  },
-  propertyTitle: {
-    type: String,
-    required: true,
-  },
-  propertyDescription: {
-    type: String,
-    required: true,
-  },
-  images: [
-    {
-      type: String, // Image URL
+const propertySchema = new mongoose.Schema(
+  {
+    propertyType: {
+      type: String,
+      enum: ["Residential", "Commercial"],
       required: true,
     },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
+    category: {
+      type: String,
+      required: true,
+    },
+    location: {
+      type: String,
+      required: true,
+    },
+
+    propertyName: {
+      type: String,
+      required: true,
+    },
+    propertyDescription: {
+      type: String,
+    },
+    rentPrice: {
+      type: Number,
+      required: true,
+    },
+    bedrooms: {
+      type: Number,
+      required: false,
+    },
+    bathrooms: {
+      type: Number,
+      required: false,
+    },
+    propertySize: {
+      type: Number,
+      required: true,
+    },
+    sizeUnit: {
+      type: String,
+      enum: ["Marla", "Sq Ft", "Sq M", "Sq Yd", "Kanal"],
+      required: true,
+    },
+    features: [
+      {
+        type: String,
+      },
+    ],
+    contactNumber: {
+      type: String,
+      required: true,
+    },
+    locationLatLng: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
+    images: [
+      {
+        uri: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    status: {
+      type: String,
+      enum: ["listed", "rented"],
+      default: "listed", // Default value is "listed"
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
-});
+
+  {
+    timestamps: true,
+  }
+);
 
 const Property = mongoose.model("Property", propertySchema);
 

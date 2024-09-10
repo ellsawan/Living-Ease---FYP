@@ -1,49 +1,356 @@
-const Property = require('../models/Property');
-const cloudinary = require('../config/cloudinary');
-const uploader = cloudinary.uploader;
-const multer = require('multer');
-const upload = multer({ dest: './uploads/' });
+const Property = require("../models/Property");
+const cloudinary = require("../config/cloudinary");
+const multer = require("multer");
 
-exports.addProperty = upload.array('images', 20); // allow up to 10 images
+const uploader = cloudinary.uploader;
+const upload = multer({ dest: "./uploads/" });
+
+exports.addProperty = upload.array("images");
 
 exports.addPropertyController = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    // Upload images to Cloudinary
-    const images = await Promise.all(req.files.map((file) => {
-      return uploader.upload(file.path, {
-        resource_type: 'image',
-      });
-    }));
+    // Handle file uploads
+    const images =
+      req.files && req.files.length
+        ? await Promise.all(
+            req.files.map((file) =>
+              uploader.upload(file.path, { resource_type: "image" })
+            )
+          )
+        : [];
 
-    // Create a new property
-    const property = new Property({
-      propertyCategory: req.body.propertyCategory,
-      city: req.body.city,
+    // Parse locationLatLng
+    const { type, coordinates } = JSON.parse(req.body.locationLatLng || "{}");
+    if (type !== "Point" || !coordinates || coordinates.length !== 2) {
+      return res.status(400).json({ error: "Invalid locationLatLng format" });
+    }
+
+    const [lat, lng] = coordinates;
+
+    // Parse and validate features
+    let features = [];
+    if (req.body.features) {
+      try {
+        features = JSON.parse(req.body.features);
+        if (!Array.isArray(features)) {
+          throw new Error("Features should be an array");
+        }
+      } catch (error) {
+        console.error("Error parsing features:", error);
+        features = [];
+      }
+    }
+
+    // Log parsed features for debugging
+    console.log("Parsed features:", features);
+
+    // Build the property object conditionally
+    const propertyData = {
+      propertyType: req.body.propertyType,
+      category: req.body.category,
       location: req.body.location,
-      area: req.body.area,
-      rentPrice: req.body.rentPrice,
-      bedrooms: req.body.bedrooms,
-      bathrooms: req.body.bathrooms,
-      amenities: req.body.amenities,
-      propertyTitle: req.body.propertyTitle,
+      propertyName: req.body.propertyName,
       propertyDescription: req.body.propertyDescription,
-      images: images.map((image) => image.secure_url),
+      rentPrice: req.body.rentPrice,
+      propertySize: req.body.propertySize,
+      sizeUnit: req.body.sizeUnit,
+      contactNumber: req.body.contactNumber,
+      images: images.map((image) => ({ uri: image.secure_url })),
       owner: req.user.id,
-    });
+      locationLatLng: {
+        type,
+        coordinates,
+      },
+    };
+
+    // Conditionally add `bedrooms` and `bathrooms` if propertyType is 'Residential'
+    if (req.body.propertyType === 'Residential') {
+      propertyData.bedrooms = req.body.bedrooms;
+      propertyData.bathrooms = req.body.bathrooms;
+    }
+
+    // Conditionally add `features` if it is an array and not empty
+    if (features.length > 0) {
+      propertyData.features = features;
+    }
+
+    const property = new Property(propertyData);
 
     // Save the property
     await property.save();
-
     return res.status(201).json({
-      message: 'Property added successfully',
+      message: "Property added successfully",
       property,
     });
   } catch (error) {
-    console.error('Error adding property:', error);
-    return res.status(500).json({ error: 'Error adding property' });
+    console.error("Error adding property:", error);
+    return res
+      .status(500)
+      .json({ error: "Error adding property", message: error.message });
   }
 };
+
+
+
+exports.updateProperty = upload.array("images");
+
+exports.updatePropertyController = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const { propertyId } = req.params; // Get property ID from the request parameters
+
+    // Find the existing property
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    // Check if the user is the owner of the property
+    if (property.owner.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Forbidden, not the owner of the property" });
+    }
+
+    // Handle file uploads if present
+    let images = [];
+    if (req.files && req.files.length) {
+      images = await Promise.all(
+        req.files.map((file) =>
+          uploader.upload(file.path, { resource_type: "image" })
+        )
+      );
+    }
+
+    // Parse and validate features
+    let features = [];
+    if (req.body.features) {
+      try {
+        features = JSON.parse(req.body.features);
+        if (!Array.isArray(features)) {
+          throw new Error("Features should be an array");
+        }
+      } catch (error) {
+        console.error("Error parsing features:", error);
+        return res.status(400).json({ error: "Invalid features format" });
+      }
+    }
+
+    // Parse and validate locationLatLng
+    let locationLatLng = {};
+    if (req.body.locationLatLng) {
+      try {
+        locationLatLng = JSON.parse(req.body.locationLatLng);
+        const { type, coordinates } = locationLatLng;
+        if (type !== "Point" || !Array.isArray(coordinates) || coordinates.length !== 2) {
+          throw new Error("Invalid locationLatLng format");
+        }
+      } catch (error) {
+        console.error("Error parsing locationLatLng:", error);
+        return res.status(400).json({ error: "Invalid locationLatLng format" });
+      }
+    }
+
+    const { type, coordinates } = locationLatLng;
+
+    // Update the property with the provided data
+    const updatedProperty = await Property.findByIdAndUpdate(
+      propertyId,
+      {
+        propertyType: req.body.propertyType || property.propertyType,
+        category: req.body.category || property.category,
+        location: req.body.location || property.location,
+        propertyName: req.body.propertyName || property.propertyName,
+        propertyDescription: req.body.propertyDescription || property.propertyDescription,
+        rentPrice: req.body.rentPrice || property.rentPrice,
+        bedrooms: req.body.propertyType === 'Residential' ? req.body.bedrooms || property.bedrooms : property.bedrooms,
+        bathrooms: req.body.propertyType === 'Residential' ? req.body.bathrooms || property.bathrooms : property.bathrooms,
+        propertySize: req.body.propertySize || property.propertySize,
+        sizeUnit: req.body.sizeUnit || property.sizeUnit,
+        features: features.length > 0 ? features : property.features,
+        contactNumber: req.body.contactNumber || property.contactNumber,
+        images: images.length > 0 ? images.map((image) => ({ uri: image.secure_url })) : property.images,
+        locationLatLng: type && coordinates ? { type, coordinates } : property.locationLatLng,
+      },
+      { new: true }
+    );
+
+    if (!updatedProperty) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    return res.status(200).json({
+      message: "Property updated successfully",
+      property: updatedProperty,
+    });
+  } catch (error) {
+    console.error("Error updating property:", error);
+    return res.status(500).json({ error: "Error updating property", message: error.message });
+  }
+};
+
+
+exports.deletePropertyController = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const { propertyId } = req.params; // Get property ID from the request parameters
+
+    // Find the property to be deleted
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    // Check if the user is the owner of the property
+    if (property.owner.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden, not the owner of the property" });
+    }
+
+    // Delete the property
+    await Property.findByIdAndDelete(propertyId);
+
+    return res.status(200).json({ message: "Property deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting property:", error);
+    return res
+      .status(500)
+      .json({ error: "Error deleting property", message: error.message });
+  }
+};
+exports.getPropertiesByOwnerController = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    // Find properties by owner ID and populate the owner field
+    const properties = await Property.find({ owner: req.user.id }).populate('owner');
+
+    if (!properties.length) {
+      return res.status(404).json({ message: "This owner does not have any properties listed." });
+    }
+
+    return res.status(200).json({
+      message: "Properties retrieved successfully",
+      properties,
+    });
+  } catch (error) {
+    console.error("Error retrieving properties:", error);
+    return res.status(500).json({ error: "Error retrieving properties", message: error.message });
+  }
+};
+
+exports.getPropertyByIdController = async (req, res) => {
+  try {
+    const { propertyId } = req.params; // Get property ID from the request parameters
+
+    // Find the property by ID and populate the owner field
+    const property = await Property.findById(propertyId).populate('owner');
+
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    return res.status(200).json({
+      message: "Property retrieved successfully",
+      property,
+    });
+  } catch (error) {
+    console.error("Error retrieving property:", error);
+    return res.status(500).json({ error: "Error retrieving property", message: error.message });
+  }
+};
+
+
+// Controller function for searching properties
+exports.searchProperties = async function(req, res) {
+  try {
+    const searchParams = req.query;
+    console.log('Search Params:', searchParams);
+
+    const query = {};
+
+    // Handle locationLatLng
+    if (searchParams.longitude && searchParams.latitude && searchParams.distance) {
+      const longitude = parseFloat(searchParams.longitude);
+      const latitude = parseFloat(searchParams.latitude);
+      const maxDistance = parseFloat(searchParams.distance) * 1000; // Convert distance to meters
+
+      if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(maxDistance)) {
+        query.locationLatLng = {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [longitude, latitude],
+            },
+            $maxDistance: maxDistance,
+          },
+        };
+      }
+    }
+
+    // Handle property type
+    if (searchParams.propertyType) {
+      query.propertyType = searchParams.propertyType;
+    }
+
+    // Handle category
+    if (searchParams.category) {
+      query.category = { $in: searchParams.category.split(',') };
+    }
+
+    // Handle minRentPrice and maxRentPrice
+    if (searchParams.minRentPrice) {
+      query.rentPrice = { $gte: parseInt(searchParams.minRentPrice, 10) };
+    }
+    if (searchParams.maxRentPrice) {
+      query.rentPrice = { ...query.rentPrice, $lte: parseInt(searchParams.maxRentPrice, 10) };
+    }
+
+    // Handle bedrooms
+    if (searchParams.bedrooms && !isNaN(parseInt(searchParams.bedrooms, 10))) {
+      if (searchParams.bedrooms === '10_or_more') {
+        query.bedrooms = { $gte: 10 };
+      } else {
+        query.bedrooms = parseInt(searchParams.bedrooms, 10);
+      }
+    }
+
+    // Handle bathrooms
+    if (searchParams.bathrooms && !isNaN(parseInt(searchParams.bathrooms, 10))) {
+      if (searchParams.bathrooms === '6_or_more') {
+        query.bathrooms = { $gte: 6 };
+      } else {
+        query.bathrooms = parseInt(searchParams.bathrooms, 10);
+      }
+    }
+
+    // Handle minPropertySize and maxPropertySize
+    if (searchParams.minPropertySize) {
+      query.propertySize = { $gte: parseInt(searchParams.minPropertySize, 10) };
+    }
+    if (searchParams.maxPropertySize) {
+      query.propertySize = { ...query.propertySize, $lte: parseInt(searchParams.maxPropertySize, 10) };
+    }
+
+    console.log('Constructed Query:', JSON.stringify(query, null, 2));
+
+    // Execute the query
+    const properties = await Property.find(query).exec();
+    res.json(properties);
+  } catch (error) {
+    console.error('Error searching properties:', error);
+    res.status(500).json({ message: 'An error occurred while searching for properties' });
+  }
+};
+

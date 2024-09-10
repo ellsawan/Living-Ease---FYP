@@ -12,11 +12,9 @@ apiClient.interceptors.request.use(
     try {
       const token = await AsyncStorage.getItem('token');
       if (token) {
-        console.log('Token retrieved:', token);
+        
         config.headers['Authorization'] = `Bearer ${token}`;
-      } else {
-        console.error('No token found in storage');
-      }
+      } 
       return config;
     } catch (error) {
       console.error('Error retrieving token:', error);

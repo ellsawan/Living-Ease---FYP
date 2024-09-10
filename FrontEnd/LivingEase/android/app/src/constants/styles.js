@@ -39,23 +39,23 @@ const commonStyles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.lightgrey,
+    backgroundColor: Colors.white,
     borderRadius: 10,
+    borderWidth:1.5,
+    borderColor: Colors.primary,
     marginVertical: 10,
     paddingHorizontal: 10,
     width: '100%',
-    color:Colors.darkText, // Ensure full width
+    
+ 
   },
   inputField: {
     flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
     fontFamily: Fonts.regular,
     fontSize: 16,
     color: Colors.darkText,
-    borderWidth: 0,
-    backgroundColor: 'transparent',
     height: 60,
+    
   },
   icon: {
     marginRight: 10,
@@ -63,19 +63,20 @@ const commonStyles = StyleSheet.create({
   
   buttonContainer: {
     width: '100%',
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     marginVertical: 10,
   },
   button: {
     backgroundColor: Colors.primary,
     paddingVertical: 16,
+   
     paddingHorizontal: 24,
     marginHorizontal: 8,
     marginVertical: 8,
-    borderRadius: 15,
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%', // Ensure button takes full width
+    width: '100%',
     alignSelf: 'center', // Center the button horizontally
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -84,7 +85,7 @@ const commonStyles = StyleSheet.create({
     elevation: 5, // for Android
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 20,
     color: Colors.white,
     fontFamily: Fonts.semiBold,
     textAlign: 'center',
@@ -92,7 +93,7 @@ const commonStyles = StyleSheet.create({
 
   inputTitle: {
     fontFamily: Fonts.semiBold,
-    fontSize: 16,
+    fontSize: 18,
     color: Colors.blue,
     marginBottom: 5,
   },

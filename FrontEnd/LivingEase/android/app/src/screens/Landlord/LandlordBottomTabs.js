@@ -4,12 +4,10 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from '../../constants/Colors';
 import LandlordDashboard from './LandlordDashboard';
-import MessagesScreen from '../common/MessagesScreen';
-import NotificationScreen from '../common/NotificationScreen';
-import SettingsScreen from '../common/SettingsScreen';
+import LandlordSetting from '../Landlord/LandlordSetting'
 import fonts from '../../constants/Font';
-import CommonNavigator from '../../navigation/CommonNavigator';
-
+import LandlordMessages from './LandlordMessages';
+import LandlordNotifications from './LandlordNotifications';
 const Tab = createBottomTabNavigator();
 
 const LandlordBottomTabs = () => {
@@ -48,8 +46,8 @@ const LandlordBottomTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Messages"
-        component={MessagesScreen}
+        name="LandlordMessages"
+        component={LandlordMessages}
         options={{
           headerShown: false,
           tabBarIcon: ({color, focused}) => (
@@ -63,8 +61,8 @@ const LandlordBottomTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Notifications"
-        component={NotificationScreen}
+        name="LandlordNotifications"
+        component={LandlordNotifications}
         options={{
           headerShown: false,
           tabBarIcon: ({color, focused}) => (
@@ -79,17 +77,17 @@ const LandlordBottomTabs = () => {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={LandlordSetting}
         options={{
           headerShown: false,
           tabBarIcon: ({color, focused}) => (
             <Icon
-              name={focused ? 'settings' : 'settings-outline'}
+              name={focused ? 'person' : 'person-outline'}
               size={26}
               color={color}
             />
           ),
-          tabBarLabel: 'Settings',
+          tabBarLabel: 'Profile',
         }}
       />
     </Tab.Navigator>

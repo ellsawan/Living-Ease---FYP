@@ -4,6 +4,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import commonStyles from '../../constants/styles';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
+
 const SelectRoleScreen = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState('');
 
@@ -24,9 +25,22 @@ const SelectRoleScreen = ({ navigation }) => {
     return styles.roleCard;
   };
 
+  const getRoleDescription = role => {
+    switch (role) {
+      case 'Landlord':
+        return " Keep your properties and tenants in check";
+      case 'Tenant':
+        return "Rent, manage, and live with comfort.";
+      case 'Service Provider':
+        return "Connect with those who need your expertise.";
+      default:
+        return '';
+    }
+  };
+
   return (
     <View style={commonStyles.container}>
-      <Text style={commonStyles.title}>Choose Your Role</Text>
+      <Text style={commonStyles.title}>What's Your Role?</Text>
       <View style={styles.cardContainer}>
         <TouchableOpacity
           style={getCardStyle('Landlord')}
@@ -36,7 +50,10 @@ const SelectRoleScreen = ({ navigation }) => {
             size={40}
             color={Colors.primary}
           />
-          <Text style={styles.roleCardText}>Landlord</Text>
+          <Text style={styles.roleCardText}>I am a Landlord</Text>
+          <Text style={styles.roleDescription}>
+            {getRoleDescription('Landlord')}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={getCardStyle('Tenant')}
@@ -46,17 +63,23 @@ const SelectRoleScreen = ({ navigation }) => {
             size={40}
             color={Colors.primary}
           />
-          <Text style={styles.roleCardText}>Tenant</Text>
+          <Text style={styles.roleCardText}>I am a Tenant</Text>
+          <Text style={styles.roleDescription}>
+            {getRoleDescription('Tenant')}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={getCardStyle('Service Provider')}
-          onPress={() => handleRoleSelect('ServiceProvider')}>
+          onPress={() => handleRoleSelect('Service Provider')}>
           <MaterialCommunityIcons
             name="tools"
             size={40}
             color={Colors.primary}
           />
-          <Text style={styles.roleCardText}>Service Provider</Text>
+          <Text style={styles.roleCardText}>I am a Service Provider</Text>
+          <Text style={styles.roleDescription}>
+            {getRoleDescription('Service Provider')}
+          </Text>
         </TouchableOpacity>
       </View>
       {selectedRole && (
@@ -96,7 +119,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.dark,
     fontFamily: fonts.semiBold,
-    marginTop: 10, // Add some space between the icon and the text
+    marginTop: 10,
+  },
+  roleDescription: {
+    fontSize: 14,
+    color: Colors.placeholdertext,
+    fontFamily: fonts.regular,
+    textAlign: 'center',
+    marginTop: 10,
+    paddingHorizontal: 10,
   },
 });
 
