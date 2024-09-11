@@ -1,10 +1,10 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-export default function ScheduleVisit() {
+export default function SubmitApplication() {
   return (
     <View>
-      <Text>ScheduleVisit</Text>
+      <Text>SubmitApplication</Text>
     </View>
   )
 }

@@ -23,6 +23,7 @@
     "mime": "^4.0.4",
     "react": "18.2.0",
     "react-native": "0.74.3",
+    "react-native-calendars": "^1.303.0",
     "react-native-config": "^1.5.3",
     "react-native-country-codes-picker": "^2.3.5",
     "react-native-dropdown-picker": "^5.4.6",

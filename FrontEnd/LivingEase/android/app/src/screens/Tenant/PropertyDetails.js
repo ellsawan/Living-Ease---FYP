@@ -46,6 +46,7 @@ const PropertyDetails = ({route, navigation}) => {
     fetchPropertyDetails();
   }, [propertyId]);
 
+  
   const handleFavoritePress = async () => {
     try {
       if (isFavorited) {
@@ -61,6 +62,14 @@ const PropertyDetails = ({route, navigation}) => {
     }
   };
 
+  const handleScheduleVisit = () => {
+    navigation.navigate('ScheduleVisit'); // Navigate to ScheduleVisit screen
+  };
+  
+  const handleSendApplication = () => {
+    navigation.navigate('SubmitApplication'); // Navigate to SubmitApplication screen
+  };
+  
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -77,15 +86,7 @@ const PropertyDetails = ({route, navigation}) => {
     });
   }, [navigation, handleFavoritePress, isFavorited]);
 
-  const handleScheduleVisit = () => {
-    // Handle scheduling visit here
-    console.log('Schedule Visit button pressed');
-  };
 
-  const handleSendApplication = () => {
-    // Handle sending application here
-    console.log('Send Application button pressed');
-  };
 
   if (loading) {
     return (
@@ -345,15 +346,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   featureTile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 15,
+    backgroundColor: Colors.lightgrey,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center', // Add this line to center the content
+    justifyContent: 'center', // Add this line to center the content
+    width: 150, // Add a fixed width to make the tile more compact
+    height: 100, // Add a fixed height to make the tile more compact
+    marginRight:10,
   },
   featureText: {
     fontSize: 16,
     fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginLeft: 5,
+    marginTop:5,
   },
   locationTitle: {
     fontSize: 18,

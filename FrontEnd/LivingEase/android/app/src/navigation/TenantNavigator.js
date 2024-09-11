@@ -18,6 +18,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import TenantMessages from '../screens/Tenant/TenantMessages';
 import TenantNotifications from '../screens/Tenant/TenantNotifications';
 import LandlordProfile from '../screens/Tenant/LandlordProfile';
+import ScheduleVisit from '../screens/Tenant/ScheduleVisit';
+import SubmitApplication from '../screens/Tenant/SubmitApplication';
 const Stack = createStackNavigator();
 
 const TenantNavigator = () => {
@@ -233,7 +235,42 @@ const TenantNavigator = () => {
           ),
         })}
       />
-
+   <Stack.Screen
+        name="ScheduleVisit"
+        component={ScheduleVisit}
+        options={({navigation}) => ({
+          headerTitle: 'Schedule Visit',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+       <Stack.Screen
+        name="SubmitApplication"
+        component={SubmitApplication}
+        options={({navigation}) => ({
+          headerTitle: 'Submit Application',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
     </Stack.Navigator>
     
   );
