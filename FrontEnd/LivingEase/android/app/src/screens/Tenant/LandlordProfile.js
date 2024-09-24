@@ -8,22 +8,25 @@ import {
   TouchableOpacity,
   ScrollView,
   Linking,
+  FlatList,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import apiClient from '../../../../../apiClient';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import PropertyCard from './PropertyCard';
 
 const placeholderImage =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
-const LandlordProfile = () => {
+const LandlordProfile = ({navigation}) => {
   const route = useRoute();
   const { propertyId } = route.params;
   const [landlord, setLandlord] = useState(null);
   const [contactNumber, setContactNumber] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState([]);
   const [activeTab, setActiveTab] = useState('Listings');
 
   useEffect(() => {
@@ -31,8 +34,15 @@ const LandlordProfile = () => {
       try {
         const response = await apiClient.get(`/property/${propertyId}`);
         const owner = response.data.property.owner;
+        const ownerId= response.data.property.owner._id
+        console.log('owner', owner);
         setLandlord(owner);
-        setContactNumber(response.data.property.contactNumber); // Set contact number from property details
+        setContactNumber(landlord.contactNumber);
+
+        // Fetch properties by the landlord's ID
+        const propertiesResponse = await apiClient.get(`property/properties/owner/${ownerId}`);
+        console.log('Fetched properties:', propertiesResponse.data.properties);
+        setProperties(propertiesResponse.data.properties);
       } catch (error) {
         console.error('Error fetching landlord details:', error);
       } finally {
@@ -44,6 +54,9 @@ const LandlordProfile = () => {
       fetchLandlordDetails();
     }
   }, [propertyId]);
+  const handlePress = (propertyId) => {
+    navigation.navigate('PropertyDetails', { propertyId });
+  };
 
   const handleCallPress = () => {
     if (contactNumber) {
@@ -116,9 +129,23 @@ const LandlordProfile = () => {
       </View>
 
       {/* Tab Content */}
-      <ScrollView style={styles.tabContent}>
+      <ScrollView style={styles.tabContent}
+        nestedScrollEnabled={true}
+        >
+          
         {activeTab === 'Listings' ? (
-          <Text>Listings content goes here</Text> // Replace with actual listings content
+          <FlatList
+          scrollEnabled={false}
+            data={properties}
+            renderItem={({ item }) => (
+              <PropertyCard
+                property={item}
+                onPress={() => handlePress(item._id)}
+                isSelected={false} // Adjust if you need selection functionality
+              />
+            )}
+            keyExtractor={(item) => item._id}
+          />
         ) : (
           <Text>Reviews content goes here</Text> // Replace with actual reviews content
         )}

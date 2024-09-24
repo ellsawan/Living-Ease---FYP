@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../../constants/Colors'; // Adjust the path as needed
 import fonts from '../../constants/Font'; // Adjust the path as needed
 import Icon from 'react-native-vector-icons/Ionicons'; // Adjust the path as needed
@@ -8,12 +9,19 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons'; // Adjust th
 const Properties = ({ route, navigation }) => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tenantId, setTenantId] = useState(null); // State to hold tenant ID
 
   useEffect(() => {
+    const fetchTenantId = async () => {
+      const id = await AsyncStorage.getItem('userId'); // Get tenant ID from AsyncStorage
+      setTenantId(id);
+    };
+
     const fetchProperties = async () => {
       try {
         const searchParams = route.params.searchParams;
         setProperties(searchParams);
+        console.log('Fetched properties:', searchParams);
       } catch (error) {
         console.error('Error fetching properties:', error);
       } finally {
@@ -21,18 +29,21 @@ const Properties = ({ route, navigation }) => {
       }
     };
 
-    fetchProperties();
+    fetchTenantId(); // Fetch tenant ID
+    fetchProperties(); // Fetch properties
   }, [route]);
 
-  const handlePress = (propertyId) => {
-    navigation.navigate('PropertyDetails', { propertyId });
+  // Function to handle property card press
+  const handlePress = (propertyId, ownerId) => {
+    console.log('Navigating to PropertyDetails with:', { propertyId, ownerId, tenantId });
+    navigation.navigate('PropertyDetails', { propertyId, ownerId, tenantId }); // Pass tenantId along with propertyId and ownerId
   };
 
   const renderItem = ({ item }) => {
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => handlePress(item._id)}
+        onPress={() => handlePress(item._id, item.owner)} // Pass owner along with the property id
       >
         <Image
           source={{ uri: item.images.length > 0 ? item.images[0].uri : 'https://via.placeholder.com/150' }}

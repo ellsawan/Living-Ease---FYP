@@ -37,7 +37,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
     padding: 8,
-    margin: 15,
+    margin: 5,
+    marginBottom:20,
     marginTop: -5,
   },
   searchInput: {

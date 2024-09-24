@@ -192,11 +192,11 @@ const Location = ({route}) => {
       console.log('Sending to Edit Screen:');
       console.log('Address:', currentLocation.address);
       console.log('Location LatLng:', locationLatLng);
-      // Handle location confirmation for editing property
       navigation.navigate('EditProperty', {
-        address: currentLocation.address,
-        locationLatLng: locationLatLng,
-        propertyId,
+        params: {
+          address: currentLocation.address,
+          locationLatLng: locationLatLng,
+        },
       });
     }
   };

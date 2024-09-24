@@ -7,6 +7,9 @@ const userRoutes= require('./routes/userRoutes')
 const propertyRoutes = require('./routes/propertyRoutes');
 const tenantRoutes=require('./routes/tenantRoutes');
 const landlordRoutes=require('./routes/landlordRoutes')
+const rentalApplicationRoutes=require('./routes/rentalApplicationRoutes')
+const appointmentRoutes=require('./routes/appointmentRoutes')
+const leaseAgreementRoutes = require('./routes/leaseAgreementRoutes');
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 const timeout = require('connect-timeout');
@@ -33,8 +36,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/property', propertyRoutes);
 app.use ('/api/landlord', landlordRoutes);
-
 app.use('/api/tenant', tenantRoutes);
+app.use('/api/rentalApplication', rentalApplicationRoutes);
+app.use('/api/appointment',appointmentRoutes)
+app.use('/api/leaseAgreement',leaseAgreementRoutes)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');

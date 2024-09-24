@@ -31,7 +31,7 @@ const SelectRoleScreen = ({ navigation }) => {
         return " Keep your properties and tenants in check";
       case 'Tenant':
         return "Rent, manage, and live with comfort.";
-      case 'Service Provider':
+      case 'ServiceProvider':
         return "Connect with those who need your expertise.";
       default:
         return '';
@@ -69,8 +69,8 @@ const SelectRoleScreen = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={getCardStyle('Service Provider')}
-          onPress={() => handleRoleSelect('Service Provider')}>
+          style={getCardStyle('ServiceProvider')}
+          onPress={() => handleRoleSelect('ServiceProvider')}>
           <MaterialCommunityIcons
             name="tools"
             size={40}
@@ -78,7 +78,7 @@ const SelectRoleScreen = ({ navigation }) => {
           />
           <Text style={styles.roleCardText}>I am a Service Provider</Text>
           <Text style={styles.roleDescription}>
-            {getRoleDescription('Service Provider')}
+            {getRoleDescription('ServiceProvider')}
           </Text>
         </TouchableOpacity>
       </View>

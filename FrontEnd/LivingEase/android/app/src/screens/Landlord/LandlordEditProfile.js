@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,23 +13,21 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import commonStyles from '../../constants/styles';
 import fonts from '../../constants/Font';
-import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import apiClient from '../../../../../apiClient';
 
-const EditProfileScreen = ({navigation}) => {
+const EditProfileScreen = ({ navigation }) => {
   const [contactNumber, setContactNumber] = useState('');
   const [profileImage, setProfileImage] = useState(
-    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
   );
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch user data when the component mounts
     const fetchUserData = async () => {
       try {
         const response = await apiClient.get('user/userData');
@@ -37,10 +35,10 @@ const EditProfileScreen = ({navigation}) => {
         setFirstName(userData.firstName);
         setLastName(userData.lastName);
         setEmail(userData.email);
-        setContactNumber(userData.contactNumber);
+        setContactNumber(userData.contactNumber.replace('+92 ', '')); // Remove +92 prefix
         setProfileImage(
           userData.profileImage ||
-            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+          'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
         );
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -99,46 +97,43 @@ const EditProfileScreen = ({navigation}) => {
       'Select Image Source',
       'Choose an option',
       [
-        {text: 'Cancel', style: 'cancel'},
-        {text: 'Take Photo', onPress: handleCamera},
-        {text: 'Choose from Library', onPress: handleImagePicker},
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Take Photo', onPress: handleCamera },
+        { text: 'Choose from Library', onPress: handleImagePicker },
       ],
-      {cancelable: true},
+      { cancelable: true }
     );
   };
 
   const handleSave = async () => {
     try {
       setLoading(true);
+      const trimmedContactNumber = `+92 ${contactNumber.trim()}`; // Add +92 prefix
 
-      // Prepare form data
       const formData = new FormData();
       formData.append('firstName', firstName);
       formData.append('lastName', lastName);
-      formData.append('contactNumber', contactNumber);
+      formData.append('contactNumber', trimmedContactNumber);
       formData.append('email', email);
 
-      // Add image if available
       if (
         profileImage &&
         profileImage !==
-          'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+        'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
       ) {
         formData.append('image', {
           uri: profileImage,
-          type: 'image/jpeg', // Adjust based on image type
-          name: 'profile-image.jpg', // Or use the actual file name
+          type: 'image/jpeg',
+          name: 'profile-image.jpg',
         });
       }
 
-      // Send the data to the backend
       const response = await apiClient.put('user/updateUserData', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      // Check for successful response
       if (response.status === 200) {
         Alert.alert('Success', 'Profile updated successfully!');
       } else {
@@ -152,7 +147,7 @@ const EditProfileScreen = ({navigation}) => {
       ) {
         Alert.alert(
           'Error',
-          'This email is already in use. Please use another email.',
+          'This email is already in use. Please use another email.'
         );
       } else {
         Alert.alert('Error', 'Failed to update profile');
@@ -162,18 +157,24 @@ const EditProfileScreen = ({navigation}) => {
     }
   };
 
+  const handleContactNumberChange = (text) => {
+    const cleanedText = text.replace(/[^0-9]/g, '');
+    setContactNumber(cleanedText);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={handleImageSourceSelection}>
           <Image
-            source={{uri: profileImage}}
+            source={{ uri: profileImage }}
             style={styles.profilePicture}
             resizeMode="cover"
           />
           <TouchableOpacity
             style={styles.cameraButton}
-            onPress={handleImageSourceSelection}>
+            onPress={handleImageSourceSelection}
+          >
             <Icon name="camera" size={20} color={Colors.white} />
           </TouchableOpacity>
         </TouchableOpacity>
@@ -192,7 +193,7 @@ const EditProfileScreen = ({navigation}) => {
             style={commonStyles.icon}
           />
           <TextInput
-            style={[commonStyles.inputField, {flex: 1}]}
+            style={[commonStyles.inputField, { flex: 1 }]}
             placeholder="First Name"
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setFirstName}
@@ -210,7 +211,7 @@ const EditProfileScreen = ({navigation}) => {
             style={commonStyles.icon}
           />
           <TextInput
-            style={[commonStyles.inputField, {flex: 1}]}
+            style={[commonStyles.inputField, { flex: 1 }]}
             placeholder="Last Name"
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setLastName}
@@ -228,7 +229,7 @@ const EditProfileScreen = ({navigation}) => {
             style={commonStyles.icon}
           />
           <TextInput
-            style={[commonStyles.inputField, {flex: 1}]}
+            style={[commonStyles.inputField, { flex: 1 }]}
             placeholder="Email"
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setEmail}
@@ -236,25 +237,21 @@ const EditProfileScreen = ({navigation}) => {
             keyboardType="email-address"
           />
           {error && error.email && (
-            <Text style={{color: 'red', fontSize: 12}}>{error.email}</Text>
+            <Text style={{ color: 'red', fontSize: 12 }}>{error.email}</Text>
           )}
         </View>
 
         <Text style={commonStyles.inputTitle}>Contact Number</Text>
         <View style={commonStyles.inputWrapper}>
-          <Icon
-            name="phone"
-            size={20}
-            color={Colors.dark}
-            style={commonStyles.icon}
-          />
+          <Text style={{ position: 'absolute', left: 20, top: 15, color: Colors.dark, fontSize: 18 }}>+92 </Text>
           <TextInput
-            style={[commonStyles.inputField, {flex: 1}]}
-            placeholder="Contact Number"
+            style={[commonStyles.inputField, { flex: 1, paddingLeft: 50 }]}
+            placeholder=""
             placeholderTextColor={Colors.placeholdertext}
-            onChangeText={setContactNumber}
-            value={contactNumber}
+            onChangeText={handleContactNumberChange}
             keyboardType="phone-pad"
+            maxLength={10}
+            value={contactNumber}
           />
         </View>
       </View>
@@ -286,9 +283,9 @@ const styles = StyleSheet.create({
   cameraButton: {
     position: 'absolute',
     bottom: 5,
-    right: 5,
+    right: 10,
     backgroundColor: Colors.primary,
-    borderRadius: 25,
+    borderRadius: 30,
     padding: 10,
   },
   name: {

@@ -5,6 +5,7 @@ import apiClient from '../../../../../apiClient';
 import Colors from '../../constants/Colors';
 import PropertyCard from './PropertyCard';
 import fonts from '../../constants/Font';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FavoritesScreen = () => {
   const navigation = useNavigation();
@@ -12,6 +13,12 @@ const FavoritesScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedProperties, setSelectedProperties] = useState([]);
+  const [tenantId, setTenantId] = useState(null); // State to hold tenant ID
+
+  const fetchTenantId = async () => {
+    const id = await AsyncStorage.getItem('userId'); // Get tenant ID from AsyncStorage
+    setTenantId(id);
+  };
 
   const fetchFavorites = async () => {
     try {
@@ -26,7 +33,8 @@ const FavoritesScreen = () => {
   };
 
   useEffect(() => {
-    fetchFavorites();
+    fetchTenantId(); // Fetch tenant ID
+    fetchFavorites(); // Fetch favorite properties
   }, []);
 
   useEffect(() => {
@@ -36,8 +44,9 @@ const FavoritesScreen = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const handlePropertyPress = (propertyId) => {
-    navigation.navigate('PropertyDetails', { propertyId });
+  const handlePropertyPress = (propertyId, ownerId) => {
+    console.log('Navigating to PropertyDetails with:', { propertyId, ownerId, tenantId });
+    navigation.navigate('PropertyDetails', { propertyId, ownerId, tenantId }); // Pass tenantId along with propertyId and ownerId
   };
 
   const handleSelectProperty = (propertyId) => {
@@ -59,11 +68,17 @@ const FavoritesScreen = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} />
-      ) : error ? (
+      {error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <>
@@ -72,7 +87,7 @@ const FavoritesScreen = () => {
             renderItem={({ item }) => (
               <PropertyCard
                 property={item}
-                onPress={handlePropertyPress}
+                onPress={() => handlePropertyPress(item._id, item.owner, tenantId)} // Pass owner along with the property id
                 onSelect={handleSelectProperty}
                 isSelected={selectedProperties.includes(item._id)}
               />
@@ -111,15 +126,21 @@ const styles = StyleSheet.create({
   compareButton: {
     backgroundColor: Colors.primary,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 20,
+    margin: 30,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 5, 
   },
   compareButtonText: {
     color: Colors.white,
     fontFamily: fonts.bold,
     fontSize: 18,
+   
   },
 });
 

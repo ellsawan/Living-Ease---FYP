@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.registerUser = async (req, res) => {
-  const { firstName, lastName, email, password, role } = req.body;
+  const { firstName, lastName, email, password, role, contactNumber } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -42,6 +42,7 @@ exports.registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      contactNumber,
     });
 
     // Create a corresponding document in the role-specific collection
@@ -100,10 +101,12 @@ exports.loginUser = async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    console.error("Login user error: ", error.message);
+    // Comment out the console log or log a generic error
+    // console.error("Login user error: ", error.message); 
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.logoutUser = (req, res) => {
   res.clearCookie('token'); // clear the token cookie

@@ -25,7 +25,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const AddProperty = ({route}) => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  const [propertyType, setPropertyType] = useState('Residential');
   const [location, setLocation] = useState(route.params?.location || '');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [propertyName, setPropertyName] = useState('');
@@ -44,7 +43,7 @@ const AddProperty = ({route}) => {
     type: 'Point',
     coordinates: [0, 0],
   });
-  const contactNumberRegex = /^\+92\d{10}$/;
+
   useEffect(() => {
     if (route.params?.locationLatLng) {
       setLocationLatLng(route.params.locationLatLng);
@@ -68,15 +67,14 @@ const AddProperty = ({route}) => {
     setLoading(true);
     
     if (
-      !propertyType ||
       !selectedCategory ||
       !address ||
       !propertyName ||
       !propertyDescription ||
       !rentPrice ||
       !propertySize ||
-      !sizeUnit ||
-      !contactNumber
+      !sizeUnit 
+      
     ) {
       setLoading(false);
       alert('Please fill in all fields');
@@ -95,27 +93,21 @@ const AddProperty = ({route}) => {
         });
       });
   
-      formData.append('propertyType', propertyType);
       formData.append('category', selectedCategory);
       formData.append('location', address);
       formData.append('propertyName', propertyName);
       formData.append('propertyDescription', propertyDescription);
       formData.append('rentPrice', rentPrice);
   
-      if (propertyType === 'Residential') {
+ 
         formData.append('bedrooms', bedrooms);
         formData.append('bathrooms', bathrooms);
-      }
   
       formData.append('propertySize', propertySize);
       formData.append('sizeUnit', sizeUnit);
-  
-      // Only append 'features' if it has values
       if (features.length > 0) {
         formData.append('features', JSON.stringify(features));
       }
-  
-      formData.append('contactNumber', contactNumber);
       formData.append('locationLatLng', JSON.stringify(locationLatLng));
       formData.append('owner', userId);
   
@@ -160,13 +152,7 @@ const AddProperty = ({route}) => {
     'Annexe',
     'Basement',
   ];
-  const commercialCategories = [
-    'Office',
-    'Shop',
-    'Warehouse',
-    'Building',
-    'Plaza',
-  ];
+  
   const featureOptions = [
     'Parking',
     'CCTV Camera',
@@ -201,9 +187,7 @@ const AddProperty = ({route}) => {
 
   const renderCategories = () => {
     const categories =
-      propertyType === 'Residential'
-        ? residentialCategories
-        : commercialCategories;
+     residentialCategories;
 
     return (
       <View style={styles.categoriesContainer}>
@@ -288,46 +272,7 @@ const AddProperty = ({route}) => {
                   style={{marginRight: 8}}
                 />
               )}
-              {category === 'Office' && (
-                <Icon
-                  name="office-building"
-                  size={20}
-                  color={Colors.primary}
-                  style={{marginRight: 8}}
-                />
-              )}
-              {category === 'Shop' && (
-                <Icon
-                  name="storefront"
-                  size={20}
-                  color={Colors.primary}
-                  style={{marginRight: 8}}
-                />
-              )}
-              {category === 'Warehouse' && (
-                <Icon
-                  name="warehouse"
-                  size={20}
-                  color={Colors.primary}
-                  style={{marginRight: 8}}
-                />
-              )}
-              {category === 'Building' && (
-                <Icon
-                  name="home-city"
-                  size={20}
-                  color={Colors.primary}
-                  style={{marginRight: 8}}
-                />
-              )}
-              {category === 'Plaza' && (
-                <Icon
-                  name="office-building-outline"
-                  size={20}
-                  color={Colors.primary}
-                  style={{marginRight: 8}}
-                />
-              )}
+
               <Text
                 style={[
                   styles.categoryText,
@@ -356,53 +301,10 @@ const AddProperty = ({route}) => {
       <ActivityIndicator size="large" color={Colors.primary} style={styles.loadingIndicator} />
     ) : (
         <View style={styles.formContainer}>
-          <Text style={commonStyles.inputTitle}>Property Type</Text>
-          <View style={styles.propertyTypeContainer}>
-            <TouchableOpacity
-              style={[
-                styles.propertyTypeButton,
-                propertyType === 'Residential' &&
-                  styles.selectedPropertyTypeButton,
-              ]}
-              onPress={() => {
-                setPropertyType('Residential');
-                setSelectedCategory(''); // Reset category when type changes
-              }}>
-              <Text
-                style={[
-                  styles.propertyTypeText,
-                  propertyType === 'Residential' &&
-                    styles.selectedPropertyTypeText,
-                ]}>
-                Residential
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.propertyTypeButton,
-                propertyType === 'Commercial' &&
-                  styles.selectedPropertyTypeButton,
-              ]}
-              onPress={() => {
-                setPropertyType('Commercial');
-                setSelectedCategory(''); // Reset category when type changes
-              }}>
-              <Text
-                style={[
-                  styles.propertyTypeText,
-                  propertyType === 'Commercial' &&
-                    styles.selectedPropertyTypeText,
-                ]}>
-                Commercial
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={commonStyles.inputTitle}>Property Category</Text>
+    
           <View
-            style={{
-              borderBottomWidth: 1,
-              borderBottomColor: Colors.primary,
-              marginVertical: 10,
-            }}
+           
           />
           {renderCategories()}
 
@@ -599,7 +501,7 @@ const AddProperty = ({route}) => {
               </TouchableOpacity>
             ))}
           </View>
-          {propertyType === 'Residential' && (
+        
             <>
               {/* Bedrooms */}
               <View style={styles.featureInput}>
@@ -649,7 +551,7 @@ const AddProperty = ({route}) => {
                 </View>
               </View>
             </>
-          )}
+          
           <Text style={commonStyles.inputTitle}>Property Title</Text>
           <View style={commonStyles.inputWrapper}>
             <TextInput
@@ -682,27 +584,7 @@ const AddProperty = ({route}) => {
               onChangeText={setRentPrice}
             />
           </View>
-          <Text style={commonStyles.inputTitle}>Contact Number</Text>
-<View style={commonStyles.inputWrapper}>
-  <TextInput
-    style={commonStyles.inputField}
-    placeholder="+92 3xxxxxxxxx"
-    keyboardType="phone-pad"
-    value={contactNumber}
-    maxLength={13} 
-    onChangeText={(text) => {
-      if (text.startsWith('+92')) {
-        if (contactNumberRegex.test(text)) {
-          setContactNumber(text);
-        } else {
-          setContactNumber(text.replace(/[^+0-9]/g, '')); // Remove any non-digit characters except for the plus sign
-        }
-      } else {
-        setContactNumber('+92' + text.replace(/[^0-9]/g, '')); // Add the +92 prefix and remove any non-digit characters
-      }
-    }}
-  />
-</View>
+        
 
           <TouchableOpacity onPress={handleSubmit} style={commonStyles.button}>
             <Text style={commonStyles.buttonText}>Submit</Text>
@@ -731,33 +613,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.white,
   },
-  propertyTypeContainer: {
-    flexDirection: 'row',
-    marginVertical: 8,
-  },
-  propertyTypeButton: {
-    flex: 1,
-    padding: 16,
-    marginHorizontal: 4,
-    borderColor: Colors.gray,
-    borderWidth: 2,
-    fontFamily: fonts.semiBold,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  selectedPropertyTypeButton: {
-    borderColor: Colors.primary,
-    borderWidth: 2,
-    borderRadius: 10,
-  },
-  propertyTypeText: {
-    fontSize: 16,
-    color: Colors.blue,
-    fontFamily: fonts.bold,
-  },
-  selectedPropertyTypeText: {
-    color: Colors.blue,
-  },
+ 
   categoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',

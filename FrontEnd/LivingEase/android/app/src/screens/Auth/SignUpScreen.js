@@ -7,19 +7,19 @@ import commonStyles from '../../constants/styles';
 import fonts from '../../constants/Font';
 
 const SignUpScreen = ({ route, navigation }) => {
-  const role = route.params?.role || 'User'; // Set default role if undefined
+  const role = route.params?.role || 'User';
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [contactNumber, setContactNumber] = useState(''); // State for contact number
 
   const handleSignUp = async () => {
-    // Trim input values to remove leading/trailing spaces
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
+    const trimmedContactNumber = `+92 ${contactNumber.trim()}`; // Add +92 prefix
 
-    // Check if any field is empty or contains only spaces
-    if (!trimmedFirstName || !trimmedLastName || !email || !password) {
+    if (!trimmedFirstName || !trimmedLastName || !email || !password || !contactNumber) {
       Alert.alert('Missing Fields', 'All fields are required and cannot be just spaces.');
       return;
     }
@@ -35,7 +35,7 @@ const SignUpScreen = ({ route, navigation }) => {
       return;
     }
 
-    console.log('Attempting to sign up with:', { email, firstName: trimmedFirstName, lastName: trimmedLastName, password, role });
+    console.log('Attempting to sign up with:', { email, firstName: trimmedFirstName, lastName: trimmedLastName, password, role, contactNumber: trimmedContactNumber });
 
     try {
       const response = await apiClient.post('auth/register', {
@@ -44,12 +44,11 @@ const SignUpScreen = ({ route, navigation }) => {
         lastName: trimmedLastName,
         password,
         role,
+        contactNumber: trimmedContactNumber, // Include contact number in registration
       });
 
       console.log(response.data);
       Alert.alert('Success', 'Registration successful!');
-
-      // Navigate to the SignInScreen after successful registration
       navigation.navigate('SignInScreen');
     } catch (error) {
       if (error.response?.status === 400) {
@@ -61,9 +60,15 @@ const SignUpScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleContactNumberChange = (text) => {
+    // Allow user to enter number after +92
+    const cleanedText = text.replace(/[^0-9]/g, ''); 
+    setContactNumber(cleanedText);
+  };
+
   return (
     <View style={commonStyles.container}>
-      <View style={{ marginBottom: 30, alignItems: 'flex-start', width: '100%' }}>
+      <View style={{ marginBottom: 20, alignItems: 'flex-start', width: '100%' }}>
         <Text style={{ fontSize: 32, fontFamily: fonts.bold, color: Colors.darkText, textAlign: 'left' }}>
           Get Started.
         </Text>
@@ -82,7 +87,6 @@ const SignUpScreen = ({ route, navigation }) => {
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setFirstName}
             value={firstName}
-            autoCapitalize="words"
           />
         </View>
 
@@ -95,7 +99,6 @@ const SignUpScreen = ({ route, navigation }) => {
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setLastName}
             value={lastName}
-            autoCapitalize="words"
           />
         </View>
 
@@ -109,7 +112,6 @@ const SignUpScreen = ({ route, navigation }) => {
             onChangeText={setEmail}
             value={email}
             keyboardType="email-address"
-            autoCapitalize="none"
           />
         </View>
 
@@ -123,6 +125,20 @@ const SignUpScreen = ({ route, navigation }) => {
             onChangeText={setPassword}
             value={password}
             secureTextEntry
+          />
+        </View>
+
+        <Text style={commonStyles.inputTitle}>Contact Number</Text>
+        <View style={commonStyles.inputWrapper}>
+          <Text style={{ position: 'absolute', left: 20, top: 15, color: Colors.dark, fontSize:18, }}>+92 </Text>
+          <TextInput
+            style={[commonStyles.inputField, { flex: 1, paddingLeft: 50 }]} // Add padding to avoid overlap
+            placeholder=""
+            placeholderTextColor={Colors.placeholdertext}
+            onChangeText={handleContactNumberChange}
+            keyboardType="phone-pad"
+            maxLength={10} // Limit to max length for phone number after +92
+            value={contactNumber} // Show only the contact number
           />
         </View>
       </View>

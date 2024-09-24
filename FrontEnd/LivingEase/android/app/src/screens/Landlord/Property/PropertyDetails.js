@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.white, // Ensure it's visible and distinguishable
     borderTopWidth: 1,
     borderTopColor: Colors.lightgrey,
     flexDirection: 'row',
@@ -242,7 +241,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.primary,
-    borderRadius: 10,
+    borderRadius: 30,
     paddingVertical: 15,
     paddingHorizontal: 20,
     marginHorizontal: 10,

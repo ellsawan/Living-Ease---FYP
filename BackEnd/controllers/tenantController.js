@@ -1,5 +1,22 @@
 const Tenant = require("../models/Tenant");
 const Property = require("../models/Property");
+// Get tenant details by userId
+exports.getTenantByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const tenant = await Tenant.findOne({ user: userId }).populate('user'); // Populate the user field
+    console.log('getTenantByUserId function called');
+    console.log('Request params:', req.params);
+    console.log('Request query:', req.query)
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    res.status(200).json(tenant); // Return the populated tenant document
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Controller to add a property to tenant's favorites
 exports.addFavoriteProperty = async (req, res) => {

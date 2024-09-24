@@ -173,18 +173,15 @@ const SearchFilter = ({route}) => {
 
   const renderCategoryButtons = () => {
     const categories =
-      propertyType === 'Residential'
-        ? residentialCategories
-        : commercialCategories;
+       residentialCategories;
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <TouchableOpacity
           style={[
             styles.categoryButton,
             category.length ===
-              (propertyType === 'Residential'
-                ? residentialCategories.length
-                : commercialCategories.length) && styles.categoryButtonActive,
+                 residentialCategories.length
+               && styles.categoryButtonActive,
           ]}
           onPress={handleSelectAllCategories}>
           <Text style={styles.categoryButtonText}>All</Text>
@@ -232,32 +229,11 @@ const SearchFilter = ({route}) => {
   
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Property Type */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputTitle}>Property Type</Text>
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              propertyType === 'Residential' && styles.buttonActive,
-            ]}
-            onPress={() => setPropertyType('Residential')}>
-            <Text style={styles.buttonText}>Residential</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              propertyType === 'Commercial' && styles.buttonActive,
-            ]}
-            onPress={() => setPropertyType('Commercial')}>
-            <Text style={styles.buttonText}>Commercial</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+   
 
       {/* Category */}
       <View style={styles.inputWrapper}>
-        <Text style={commonStyles.inputTitle}>Category</Text>
+        <Text style={commonStyles.inputTitle}>Property Category</Text>
         <View style={styles.buttonGroup}>
           {propertyType && renderCategoryButtons()}
         </View>

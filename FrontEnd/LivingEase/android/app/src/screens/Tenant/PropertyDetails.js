@@ -21,7 +21,7 @@ import LandlordCard from './LandlordCard';
 const PropertyDetails = ({route, navigation}) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const {propertyId} = route.params;
+  const {propertyId, ownerId, tenantId} = route.params;
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const {width: screenWidth} = Dimensions.get('window'); // Get screen width for images
@@ -46,7 +46,6 @@ const PropertyDetails = ({route, navigation}) => {
     fetchPropertyDetails();
   }, [propertyId]);
 
-  
   const handleFavoritePress = async () => {
     try {
       if (isFavorited) {
@@ -63,13 +62,18 @@ const PropertyDetails = ({route, navigation}) => {
   };
 
   const handleScheduleVisit = () => {
-    navigation.navigate('ScheduleVisit'); // Navigate to ScheduleVisit screen
+    console.log('Navigating to Schedule with:', {
+      propertyId,
+      ownerId,
+      tenantId,
+    });
+    navigation.navigate('ScheduleVisit', {propertyId, ownerId, tenantId}); // Pass IDs
   };
-  
+
   const handleSendApplication = () => {
-    navigation.navigate('SubmitApplication'); // Navigate to SubmitApplication screen
+    navigation.navigate('ApplicationForm', {propertyId, ownerId, tenantId}); // Pass IDs
   };
-  
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -86,8 +90,6 @@ const PropertyDetails = ({route, navigation}) => {
     });
   }, [navigation, handleFavoritePress, isFavorited]);
 
-
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -99,7 +101,9 @@ const PropertyDetails = ({route, navigation}) => {
   if (!property) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.noPropertyText}>Property not found.</Text>
+        <Text style={styles.noPropertyText}>
+          This property has been rented out or removed by the landlord.
+        </Text>
       </View>
     );
   }
@@ -308,9 +312,12 @@ const styles = StyleSheet.create({
     color: Colors.darkText,
   },
   propertyCategory: {
-    fontSize: 18,
-    fontFamily: fonts.regular,
-    color: Colors.gray,
+    fontSize: 14,
+    padding: 10,
+    backgroundColor: Colors.lightgrey,
+    borderRadius: 20,
+    fontFamily: fonts.semiBold,
+    color: Colors.primary,
   },
   propertyLocation: {
     fontSize: 16,
@@ -353,13 +360,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Add this line to center the content
     width: 150, // Add a fixed width to make the tile more compact
     height: 100, // Add a fixed height to make the tile more compact
-    marginRight:10,
+    marginRight: 10,
   },
   featureText: {
     fontSize: 16,
     fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginTop:5,
+    marginTop: 5,
   },
   locationTitle: {
     fontSize: 18,

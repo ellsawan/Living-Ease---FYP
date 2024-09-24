@@ -2,8 +2,8 @@ import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import TenantBottomTabs from '../screens/Tenant/TenantBottomTabs';
 import Properties from '../screens/Tenant/Properties';
-import TenantSetting from '../screens/Tenant/TenantSetting'
-import TenantEditProfile from '../screens/Tenant/TenantEditProfile'
+import TenantSetting from '../screens/Tenant/TenantSetting';
+import TenantEditProfile from '../screens/Tenant/TenantEditProfile';
 import EditProperty from '../screens/Landlord/Property/EditProperty';
 import fonts from '../constants/Font';
 import Colors from '../constants/Colors';
@@ -13,13 +13,17 @@ import Location from '../screens/Tenant/Location';
 import Favorites from '../screens/Tenant/Favorites';
 import PropertyDetails from '../screens/Tenant/PropertyDetails';
 import CompareProperties from '../screens/Tenant/CompareProperties';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import TenantMessages from '../screens/Tenant/TenantMessages';
 import TenantNotifications from '../screens/Tenant/TenantNotifications';
 import LandlordProfile from '../screens/Tenant/LandlordProfile';
-import ScheduleVisit from '../screens/Tenant/ScheduleVisit';
-import SubmitApplication from '../screens/Tenant/SubmitApplication';
+import ScheduleVisit from '../screens/Tenant/PropertyVisits/ScheduleVisit';
+import ApplicationForm from '../screens/Tenant/RentalApplications/ApplicationForm';
+import MyApplications from '../screens/Tenant/RentalApplications/MyApplications';
+import ApplicationDetail from '../screens/Tenant/RentalApplications/ApplicationDetail';
+import MyVisits from '../screens/Tenant/PropertyVisits/MyVisits';
+import MyLeaseAgreements from '../screens/Tenant/LeaseAgreement/MyLeaseAgreements'
 const Stack = createStackNavigator();
 
 const TenantNavigator = () => {
@@ -90,7 +94,7 @@ const TenantNavigator = () => {
           headerTitleAlign: 'center',
         }}
       />
-    
+
       <Stack.Screen
         name="TenantNotifications"
         component={TenantNotifications}
@@ -106,7 +110,7 @@ const TenantNavigator = () => {
           headerTitleAlign: 'center',
         }}
       />
-      
+
       <Stack.Screen
         name="Properties"
         component={Properties}
@@ -143,13 +147,13 @@ const TenantNavigator = () => {
           ),
         })}
       />
-     
-     <Stack.Screen
+
+      <Stack.Screen
         name="TenantSetting"
         component={TenantSetting}
         options={({navigation}) => ({
           headerTitle: '',
-          headerShown:false,
+          headerShown: false,
           headerTitleStyle: {
             fontSize: 22,
             color: Colors.blue,
@@ -163,12 +167,12 @@ const TenantNavigator = () => {
           ),
         })}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="TenantEditProfile"
         component={TenantEditProfile}
         options={({navigation}) => ({
-          headerTitle: '',
-          headerShown:false,
+          headerTitle: 'Edit Profile',
+          headerShown: true,
           headerTitleStyle: {
             fontSize: 22,
             color: Colors.blue,
@@ -182,7 +186,7 @@ const TenantNavigator = () => {
           ),
         })}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="LandlordProfile"
         component={LandlordProfile}
         options={({navigation}) => ({
@@ -200,24 +204,24 @@ const TenantNavigator = () => {
           ),
         })}
       />
-<Stack.Screen
-  name="PropertyDetails"
-  component={PropertyDetails}
-  options={({ navigation }) => ({
-    headerTitle: '',
-    headerTransparent: false, // Set to false to apply background color
-    headerLeft: () => (
-      <CustomHeaderBackButton onPress={() => navigation.goBack()} />
-    ),
-   
-    headerStyle: {
-      backgroundColor: 'white', // White background color for the headerd
-    },
-    headerTitleAlign: 'center', // Ensure the title aligns correctly
-  })}
-/>
+      <Stack.Screen
+        name="PropertyDetails"
+        component={PropertyDetails}
+        options={({navigation}) => ({
+          headerTitle: '',
+          headerTransparent: false, // Set to false to apply background color
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
 
-<Stack.Screen
+          headerStyle: {
+            backgroundColor: 'white', // White background color for the headerd
+          },
+          headerTitleAlign: 'center', // Ensure the title aligns correctly
+        })}
+      />
+
+      <Stack.Screen
         name="CompareProperties"
         component={CompareProperties}
         options={({navigation}) => ({
@@ -235,7 +239,7 @@ const TenantNavigator = () => {
           ),
         })}
       />
-   <Stack.Screen
+      <Stack.Screen
         name="ScheduleVisit"
         component={ScheduleVisit}
         options={({navigation}) => ({
@@ -253,11 +257,85 @@ const TenantNavigator = () => {
           ),
         })}
       />
-       <Stack.Screen
-        name="SubmitApplication"
-        component={SubmitApplication}
+      <Stack.Screen
+        name="ApplicationForm"
+        component={ApplicationForm}
         options={({navigation}) => ({
-          headerTitle: 'Submit Application',
+          headerTitle: 'Rental Application',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="MyApplications"
+        component={MyApplications}
+        options={({navigation}) => ({
+          headerTitle: 'My Rental Applications',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="ApplicationDetail"
+        component={ApplicationDetail}
+        options={({navigation}) => ({
+          headerTitle: 'Application Details',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+       <Stack.Screen
+        name="MyVisits"
+        component={MyVisits}
+        options={({navigation}) => ({
+          headerTitle: 'My Visits',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+       <Stack.Screen
+        name="MyLeaseAgreements"
+        component={MyLeaseAgreements}
+        options={({navigation}) => ({
+          headerTitle: 'My Lease Agreement',
+          headerShown: true,
           headerTitleStyle: {
             fontSize: 22,
             color: Colors.blue,
@@ -272,7 +350,6 @@ const TenantNavigator = () => {
         })}
       />
     </Stack.Navigator>
-    
   );
 };
 

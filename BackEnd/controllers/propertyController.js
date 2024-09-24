@@ -50,7 +50,6 @@ exports.addPropertyController = async (req, res) => {
 
     // Build the property object conditionally
     const propertyData = {
-      propertyType: req.body.propertyType,
       category: req.body.category,
       location: req.body.location,
       propertyName: req.body.propertyName,
@@ -58,7 +57,6 @@ exports.addPropertyController = async (req, res) => {
       rentPrice: req.body.rentPrice,
       propertySize: req.body.propertySize,
       sizeUnit: req.body.sizeUnit,
-      contactNumber: req.body.contactNumber,
       images: images.map((image) => ({ uri: image.secure_url })),
       owner: req.user.id,
       locationLatLng: {
@@ -66,14 +64,10 @@ exports.addPropertyController = async (req, res) => {
         coordinates,
       },
     };
-
-    // Conditionally add `bedrooms` and `bathrooms` if propertyType is 'Residential'
-    if (req.body.propertyType === 'Residential') {
+  
       propertyData.bedrooms = req.body.bedrooms;
       propertyData.bathrooms = req.body.bathrooms;
-    }
 
-    // Conditionally add `features` if it is an array and not empty
     if (features.length > 0) {
       propertyData.features = features;
     }
@@ -121,10 +115,11 @@ exports.updatePropertyController = async (req, res) => {
     let images = [];
     if (req.files && req.files.length) {
       images = await Promise.all(
-        req.files.map((file) =>
-          uploader.upload(file.path, { resource_type: "image" })
-        )
-      );
+        req.files.map((file) => uploader.upload(file.path, { resource_type: "image" }))
+      ).catch((uploadError) => {
+        console.error("Error uploading images:", uploadError);
+        return res.status(500).json({ error: "Error uploading images", message: uploadError.message });
+      });
     }
 
     // Parse and validate features
@@ -162,18 +157,16 @@ exports.updatePropertyController = async (req, res) => {
     const updatedProperty = await Property.findByIdAndUpdate(
       propertyId,
       {
-        propertyType: req.body.propertyType || property.propertyType,
         category: req.body.category || property.category,
         location: req.body.location || property.location,
         propertyName: req.body.propertyName || property.propertyName,
         propertyDescription: req.body.propertyDescription || property.propertyDescription,
         rentPrice: req.body.rentPrice || property.rentPrice,
-        bedrooms: req.body.propertyType === 'Residential' ? req.body.bedrooms || property.bedrooms : property.bedrooms,
-        bathrooms: req.body.propertyType === 'Residential' ? req.body.bathrooms || property.bathrooms : property.bathrooms,
+        bedrooms: req.body.bedrooms || property.bedrooms,
+        bathrooms: req.body.bathrooms || property.bathrooms,
         propertySize: req.body.propertySize || property.propertySize,
         sizeUnit: req.body.sizeUnit || property.sizeUnit,
         features: features.length > 0 ? features : property.features,
-        contactNumber: req.body.contactNumber || property.contactNumber,
         images: images.length > 0 ? images.map((image) => ({ uri: image.secure_url })) : property.images,
         locationLatLng: type && coordinates ? { type, coordinates } : property.locationLatLng,
       },
@@ -190,10 +183,15 @@ exports.updatePropertyController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating property:", error);
+    
+    // Check if it's a network error or if the error contains a specific message
+    if (error.isAxiosError) {
+      return res.status(500).json({ error: "Network error occurred", message: error.message });
+    }
+
     return res.status(500).json({ error: "Error updating property", message: error.message });
   }
 };
-
 
 exports.deletePropertyController = async (req, res) => {
   if (!req.user) {
@@ -228,6 +226,27 @@ exports.deletePropertyController = async (req, res) => {
   }
 };
 exports.getPropertiesByOwnerController = async (req, res) => {
+  const { ownerId } = req.params;
+
+  try {
+    const properties = await Property.find({ owner: ownerId }).populate('owner');
+
+    if (!properties.length) {
+      return res.status(404).json({ message: "This owner does not have any properties listed." });
+    }
+
+    return res.status(200).json({
+      message: "Properties retrieved successfully",
+      properties,
+    });
+  } catch (error) {
+    console.error("Error retrieving properties:", error);
+    return res.status(500).json({ error: "Error retrieving properties", message: error.message });
+  }
+};
+
+
+exports.getPropertiesByUserController = async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -297,11 +316,6 @@ exports.searchProperties = async function(req, res) {
           },
         };
       }
-    }
-
-    // Handle property type
-    if (searchParams.propertyType) {
-      query.propertyType = searchParams.propertyType;
     }
 
     // Handle category

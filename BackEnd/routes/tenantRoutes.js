@@ -4,7 +4,7 @@ const {
   addFavoriteProperty, 
   getFavoriteProperties, 
   removeFavoriteProperty,
-  isFavoriteProperty
+  isFavoriteProperty,getTenantByUserId
 } = require('../controllers/tenantController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -20,4 +20,8 @@ router.delete('/favorites', protect, removeFavoriteProperty);
 // Route to check if a specific property is in favorites
 router.get('/favorites/:propertyId', protect, isFavoriteProperty);
 
+// Route to get tenant details by userId
+router.get('/user/:userId', getTenantByUserId);
+
 module.exports = router;
+

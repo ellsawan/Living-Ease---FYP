@@ -1,0 +1,169 @@
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import apiClient from '../../../../../apiClient';
+import Colors from '../../constants/Colors';
+import fonts from '../../constants/Font';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+const placeholderImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+
+const TenantProfile = ({ navigation }) => {
+  const route = useRoute();
+  const { tenantId } = route.params;
+  const [tenantData, setTenantData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Reviews');
+
+  useEffect(() => {
+    const fetchTenantDetails = async () => {
+      try {
+        const response = await apiClient.get(`/tenant/user/${tenantId}`);
+        setTenantData(response.data);
+      } catch (error) {
+        console.error('Error fetching tenant details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTenantDetails();
+  }, [tenantId]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!tenantData) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.noTenantText}>Tenant not found.</Text>
+      </View>
+    );
+  }
+
+  const { firstName, lastName, profileImage } = tenantData.user;
+
+  return (
+    <View style={styles.container}>
+      <Image
+        source={{ uri: profileImage?.url || placeholderImage }}
+        style={styles.profileImage}
+      />
+      <Text style={styles.tenantName}>
+        {firstName} {lastName}
+      </Text>
+
+      <View style={styles.iconsContainer}>
+        <TouchableOpacity onPress={() => {/* Handle message action */}} style={styles.iconTextWrapper}>
+          <View style={styles.iconBackground}>
+            <Icon name="chat" size={28} color={Colors.primary} />
+          </View>
+          <Text style={styles.iconLabel}>Message</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => {/* Handle call action */}} style={styles.iconTextWrapper}>
+          <View style={styles.iconBackground}>
+            <Icon name="call" size={28} color={Colors.primary} />
+          </View>
+          <Text style={styles.iconLabel}>Call</Text>
+        </TouchableOpacity>
+      </View>
+
+
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          style={styles.tab}
+          onPress={() => setActiveTab('Reviews')}
+        >
+          <Text style={styles.tabText}>Reviews</Text>
+        </TouchableOpacity>
+      </View>
+
+
+      <ScrollView style={styles.tabContent}>
+        <Text>Reviews content goes here</Text> 
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+  },
+  profileImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    marginBottom: 20,
+  },
+  tenantName: {
+    fontSize: 22,
+    fontFamily: fonts.bold,
+    color: Colors.darkText,
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  iconTextWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 15,
+  },
+  iconBackground: {
+    backgroundColor: Colors.lightgrey,
+    borderRadius: 30,
+    padding: 10,
+    marginRight: 8,
+  },
+  iconLabel: {
+    fontSize: 14,
+    color: Colors.darkText,
+    fontFamily: fonts.regular,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noTenantText: {
+    fontSize: 18,
+    fontFamily: fonts.regular,
+    color: Colors.placeholdertext,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginVertical: 20,
+  },
+  tab: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontSize: 16,
+    color: Colors.darkText,
+    fontFamily: fonts.bold,
+  },
+  tabContent: {
+    flex: 1,
+    width: '100%',
+  },
+});
+
+export default TenantProfile;

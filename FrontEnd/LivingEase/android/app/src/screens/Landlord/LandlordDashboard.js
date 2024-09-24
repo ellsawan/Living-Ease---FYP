@@ -1,11 +1,11 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import TopBar from '../common/TopBar';
 import Greeting from '../common/Greeting';
-import {useNavigation} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import fonts from '../../constants/Font';
 
 const Stack = createStackNavigator();
@@ -17,7 +17,7 @@ const LandlordDashboard = () => {
       <Stack.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -33,37 +33,37 @@ const DashboardScreen = () => {
         <DashboardCard
           title="My Property"
           icon="home"
-          description="View and manage your properties"
+          description="View your properties"
           onPress={() => navigation.navigate('ManageProperty')}
         />
         <DashboardCard
-          title="My Tours"
+          title="My Visits"
           icon="map"
-          description="Schedule and manage property tours"
-          onPress={() => console.log('Navigate to My Tours screen')}
+          description="Schedule visits"
+          onPress={() => navigation.navigate('ManageVisits')}
         />
         <DashboardCard
           title="My Applications"
           icon="file-document-outline"
-          description="View and manage rental applications"
-          onPress={() => console.log('Navigate to My Applications screen')}
+          description="Check applications"
+          onPress={() => navigation.navigate('ManageApplications')}
         />
         <DashboardCard
           title="Lease Agreement"
           icon="file-cabinet"
-          description="View and manage lease agreements"
-          onPress={() => console.log('Navigate to Lease Agreement screen')}
+          description="Access agreements"
+          onPress={() => navigation.navigate('ManageAgreements')}
         />
         <DashboardCard
           title="Rent Payment"
           icon="currency-usd"
-          description="View and manage rent payments"
+          description="View payments"
           onPress={() => console.log('Navigate to Rent Payment screen')}
         />
         <DashboardCard
           title="Maintenance Requests"
           icon="wrench-outline"
-          description="View and manage maintenance requests"
+          description="Track requests"
           onPress={() => console.log('Navigate to Maintenance Requests screen')}
         />
       </View>
@@ -71,7 +71,7 @@ const DashboardScreen = () => {
   );
 };
 
-const DashboardCard = ({title, icon, description, onPress}) => {
+const DashboardCard = ({ title, icon, description, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       <View style={styles.cardContent}>
@@ -99,11 +99,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 20,
     shadowColor: Colors.dark,
-    shadowOffset: {width: 40, height: 40},
+    shadowOffset: { width: 40, height: 40 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
-    width: '45%',
+    width: '48%',
     height: 160,
     marginBottom: 20,
     justifyContent: 'center',
@@ -118,13 +118,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     marginTop: 10,
     marginBottom: 5,
-    color: Colors.darkText,
+    color: Colors.blue,
     textAlign: 'center',
   },
   cardDescription: {
     fontSize: 14,
     fontFamily: fonts.semiBold,
-    color: Colors.placeholdertext,
+    color: Colors.primary,
     textAlign: 'center',
   },
 });
