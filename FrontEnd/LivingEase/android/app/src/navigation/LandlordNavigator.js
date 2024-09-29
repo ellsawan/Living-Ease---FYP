@@ -21,6 +21,9 @@ import TenantProfile from '../screens/Landlord/TenantProfile';
 import ManageAgreements from '../screens/Landlord/LeaseAgreements/ManageAgreements';
 import LeaseAgreementTemplate from '../screens/Landlord/LeaseAgreements/LeaseAgreementTemplate';
 import ApprovedApplications from '../screens/Landlord/LeaseAgreements/ApprovedApplications';
+import LeaseAgreement from '../screens/Landlord/LeaseAgreements/LeaseAgreement';
+import LeaseForm from '../screens/Landlord/LeaseAgreements/LeaseForm';
+import LandlordOwnProfile from '../screens/Landlord/LandlordOwnProfile';
 const Stack = createStackNavigator();
 
 const LandlordNavigator = () => {
@@ -172,7 +175,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-     
+
       <Stack.Screen
         name="LandlordPublicProfile"
         component={LandlordPublicProfile}
@@ -191,7 +194,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-          <Stack.Screen
+      <Stack.Screen
         name="ManageApplications"
         component={ManageApplications}
         options={({navigation}) => ({
@@ -209,7 +212,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-          <Stack.Screen
+      <Stack.Screen
         name="ApplicationDetails"
         component={ApplicationDetails}
         options={({navigation}) => ({
@@ -227,7 +230,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="TenantProfile"
         component={TenantProfile}
         options={({navigation}) => ({
@@ -245,7 +248,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-         <Stack.Screen
+      <Stack.Screen
         name="ManageVisits"
         component={ManageVisits}
         options={({navigation}) => ({
@@ -263,7 +266,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-         <Stack.Screen
+      <Stack.Screen
         name="ManageAgreements"
         component={ManageAgreements}
         options={({navigation}) => ({
@@ -281,7 +284,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-         <Stack.Screen
+      <Stack.Screen
         name="LeaseAgreementTemplate"
         component={LeaseAgreementTemplate}
         options={({navigation}) => ({
@@ -291,7 +294,7 @@ const LandlordNavigator = () => {
             color: Colors.blue,
             fontFamily: fonts.bold,
             textAlign: 'center',
-            paddingVertical: 10, 
+            paddingVertical: 10,
           },
           headerTitleAlign: 'center',
           headerLeft: () => (
@@ -299,7 +302,7 @@ const LandlordNavigator = () => {
           ),
         })}
       />
-            <Stack.Screen
+      <Stack.Screen
         name="ApprovedApplications"
         component={ApprovedApplications}
         options={({navigation}) => ({
@@ -309,7 +312,62 @@ const LandlordNavigator = () => {
             color: Colors.blue,
             fontFamily: fonts.bold,
             textAlign: 'center',
-            paddingVertical: 10, 
+            paddingVertical: 10,
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+
+      <Stack.Screen
+        name="LeaseAgreement"
+        component={LeaseAgreement}
+        options={({navigation}) => ({
+          headerTitle: 'Lease Agreement',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10,
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="LeaseForm"
+        component={LeaseForm}
+        options={({navigation}) => ({
+          headerTitle: 'Lease Form',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10,
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="LandlordOwnProfile"
+        component={LandlordOwnProfile}
+        options={({navigation}) => ({
+          headerTitle: 'Public Profile',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10,
           },
           headerTitleAlign: 'center',
           headerLeft: () => (

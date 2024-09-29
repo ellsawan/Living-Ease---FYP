@@ -6,28 +6,34 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
-  ScrollView,
+  ScrollView,  FlatList,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import apiClient from '../../../../../apiClient';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import RatingCard from '../common/RatingCard';
 const placeholderImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
 const TenantProfile = ({ navigation }) => {
   const route = useRoute();
   const { tenantId } = route.params;
+  const [reviews, setReviews] = useState([]);
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Reviews');
+  const [ratings, setRatings] = useState([]); // State for ratings
 
   useEffect(() => {
     const fetchTenantDetails = async () => {
       try {
         const response = await apiClient.get(`/tenant/user/${tenantId}`);
         setTenantData(response.data);
+          // Fetch reviews for the landlord
+          const ratingsResponse = await apiClient.get(`/rating/ratings/${tenantId}`); // Adjust the endpoint as needed
+          console.log('Fetched ratings:', ratingsResponse.data);
+          setRatings(ratingsResponse.data);
       } catch (error) {
         console.error('Error fetching tenant details:', error);
       } finally {
@@ -93,7 +99,17 @@ const TenantProfile = ({ navigation }) => {
 
 
       <ScrollView style={styles.tabContent}>
-        <Text>Reviews content goes here</Text> 
+      <FlatList
+          scrollEnabled={false}
+          data={ratings.filter((item) => item.role === 'Tenant')}
+            renderItem={({ item }) => (
+              <RatingCard
+                rating={item.rating}
+                review={item.review}
+              />
+            )}
+            keyExtractor={(item) => item._id}
+          />
       </ScrollView>
     </View>
   );

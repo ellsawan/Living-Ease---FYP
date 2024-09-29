@@ -58,7 +58,7 @@ const leaseAgreementSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Accepted', 'Terminated'],
+    enum: ['Pending', 'Active', 'Terminated','Rejected'],
     default: 'Pending',
   },
   terms: {

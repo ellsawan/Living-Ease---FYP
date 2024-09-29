@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import apiClient from '../../../../../apiClient';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
@@ -23,7 +23,7 @@ const capitalizeFirstLetter = string => {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
 
-const LandlordCard = ({ propertyId, onMessagePress }) => {
+const LandlordCard = ({propertyId, onMessagePress}) => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
@@ -33,6 +33,7 @@ const LandlordCard = ({ propertyId, onMessagePress }) => {
       try {
         const response = await apiClient.get(`/property/${propertyId}`);
         setProperty(response.data.property);
+        console.log('owner', response.data.property.owner.contactNumber);
       } catch (error) {
         console.error('Error fetching property details:', error);
       } finally {
@@ -46,9 +47,11 @@ const LandlordCard = ({ propertyId, onMessagePress }) => {
   }, [propertyId]);
 
   const handleCallPress = () => {
-    if (property && property.contactNumber) {
-      const phoneNumber = `tel:${property.contactNumber}`;
-      Linking.openURL(phoneNumber).catch(err => console.error('Error opening phone dialer:', err));
+    if (property && property.owner.contactNumber) {
+      const phoneNumber = `tel:${property.owner.contactNumber}`;
+      Linking.openURL(phoneNumber).catch(err =>
+        console.error('Error opening phone dialer:', err),
+      );
     } else {
       console.error('No contact number available for the property');
     }
@@ -56,7 +59,11 @@ const LandlordCard = ({ propertyId, onMessagePress }) => {
 
   const handleCardPress = () => {
     if (property && property.owner) {
-      navigation.navigate('LandlordProfile', { landlordId: property.owner._id,propertyId,property });
+      navigation.navigate('LandlordProfile', {
+        landlordId: property.owner._id,
+        propertyId,
+        property,
+      });
     }
   };
 
@@ -83,7 +90,7 @@ const LandlordCard = ({ propertyId, onMessagePress }) => {
     <TouchableOpacity style={styles.container} onPress={handleCardPress}>
       <View style={styles.cardContent}>
         <Image
-          source={{ uri: property.owner?.profileImage?.url || placeholderImage }}
+          source={{uri: property.owner?.profileImage?.url || placeholderImage}}
           style={styles.profileImage}
         />
         <View style={styles.textContainer}>
@@ -91,14 +98,18 @@ const LandlordCard = ({ propertyId, onMessagePress }) => {
             {firstName} {lastName}
           </Text>
           <View style={styles.iconsContainer}>
-            <TouchableOpacity onPress={onMessagePress} style={styles.iconTextWrapper}>
+            <TouchableOpacity
+              onPress={onMessagePress}
+              style={styles.iconTextWrapper}>
               <View style={styles.iconBackground}>
                 <Icon name="chat" size={28} color={Colors.primary} />
               </View>
               <Text style={styles.iconLabel}>Message</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleCallPress} style={styles.iconTextWrapper}>
+            <TouchableOpacity
+              onPress={handleCallPress}
+              style={styles.iconTextWrapper}>
               <View style={styles.iconBackground}>
                 <Icon name="call" size={28} color={Colors.primary} />
               </View>
@@ -120,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 5,

@@ -24,15 +24,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const EditProperty = () => {
   const route = useRoute();
   const [propertyId, setPropertyId] = useState(route.params?.propertyId);
-
-  useEffect(() => {
-    if (route.params?.propertyId) {
-      setPropertyId(route.params.propertyId);
-    }
-  }, [route.params]);
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [location, setLocation] = useState(route.params?.location || '');
+  const [location, setLocation] = useState(route.params?.address || '');
   const [propertyName, setPropertyName] = useState('');
   const [propertyDescription, setPropertyDescription] = useState('');
   const [rentPrice, setRentPrice] = useState('');
@@ -43,41 +38,11 @@ const EditProperty = () => {
   const [showSizeUnitDropdown, setShowSizeUnitDropdown] = useState(false);
   const [features, setFeatures] = useState([]);
   const [images, setImages] = useState([]);
+  const [address, setAddress] = useState([]);
   const [locationLatLng, setLocationLatLng] = useState({
     type: 'Point',
     coordinates: [0, 0],
   });
-
-  const {address = ''} = route?.params || {};
-  const [markerCoordinate, setMarkerCoordinate] = useState(null);
-
-  const [region, setRegion] = useState({
-    latitude: 37.78825,
-    longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
-
-  useEffect(() => {
-    if (route.params?.locationLatLng) {
-      setLocationLatLng(route.params.locationLatLng);
-      setRegion({
-        latitude: route.params.locationLatLng.coordinates[1],
-        longitude: route.params.locationLatLng.coordinates[0],
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
-      setMarkerCoordinate({
-        latitude: route.params.locationLatLng.coordinates[1],
-        longitude: route.params.locationLatLng.coordinates[0],
-      });
-      if (route.params?.address) {
-        setLocation(route.params.address);
-      }
-    }
-  }, [route.params?.locationLatLng, route.params?.address]);
-
-
   useEffect(() => {
     const fetchPropertyDetails = async () => {
       try {
@@ -99,12 +64,6 @@ const EditProperty = () => {
         setSizeUnit(property?.sizeUnit);
         setFeatures(property?.features);
         setImages(property?.images?.map(image => ({uri: image.uri})));
-        setRegion({
-          latitude: property?.locationLatLng?.coordinates[1] || 37.78825,
-          longitude: property?.locationLatLng?.coordinates[0] || -122.4324,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
       } catch (error) {
         console.error('Error fetching property details:', error);
       }
@@ -112,25 +71,15 @@ const EditProperty = () => {
 
     fetchPropertyDetails();
   }, [propertyId]);
+
   useEffect(() => {
     if (route.params?.address) {
       setLocation(route.params.address);
     }
+    if (route.params?.locationLatLng) {
+      setLocationLatLng(route.params.locationLatLng);
+    }
   }, [route.params]);
-  const handleNewLocation = ({address, locationLatLng}) => {
-    setLocation(address);
-    setLocationLatLng(locationLatLng);
-    setRegion({
-      latitude: locationLatLng.coordinates[1],
-      longitude: locationLatLng.coordinates[0],
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    });
-    setMarkerCoordinate({
-      latitude: locationLatLng.coordinates[1],
-      longitude: locationLatLng.coordinates[0],
-    });
-  };
 
   const getUserId = async () => {
     try {
@@ -146,26 +95,57 @@ const EditProperty = () => {
     }
   };
   const handleSubmit = async () => {
-    if (
-      !selectedCategory ||
-      !location ||
-      !propertyName ||
-      !propertyDescription ||
-      !rentPrice ||
-      !bedrooms ||
-      !bathrooms ||
-      !propertySize ||
-      !sizeUnit
-    ) {
-      alert('Please fill in all fields');
-      navigation.navigate('ManageProperty');
+    const numericPattern = /^[0-9]+$/; // Only digits, no symbols, spaces, or non-numeric characters
+  
+    // Check if property size is non-numeric or contains symbols
+    if (!numericPattern.test(propertySize)) {
+      setLoading(false);
+      alert(
+        'Property size must be a valid number without symbols, spaces, or non-numeric characters.'
+      );
       return;
     }
-
+  
+    // Check if rentPrice is non-numeric or contains symbols
+    if (!numericPattern.test(rentPrice)) {
+      setLoading(false);
+      alert(
+        'Rent price must be a valid number without symbols, spaces, or non-numeric characters.'
+      );
+      return;
+    }
+  
+    if (images.length === 0) {
+      setLoading(false);
+      alert('Please upload at least one image.');
+      return;
+    }
+  
+    // Check for all required fields
+    if (
+      !selectedCategory || // Ensure category is selected
+      !location || // Ensure address is not empty and trimmed
+      !propertyName.trim() || // Ensure property name is not empty and trimmed
+      !propertyDescription.trim() || // Ensure property description is not empty and trimmed
+      !rentPrice || // Ensure rent price is provided
+      !propertySize || // Ensure property size is provided
+      !sizeUnit || // Ensure size unit is selected
+      bedrooms === null || // Ensure bedrooms is not null (0 is a valid number)
+      bathrooms === null // Ensure bathrooms is not null (0 is a valid number)
+    ) {
+      setLoading(false);
+      alert('Please fill in all fields.');
+      return;
+    }
+  
     try {
-      console.log('property id:', propertyId);
       const userId = await getUserId();
       const formData = new FormData();
+      console.log('propertyId:', propertyId);
+      console.log('adress:', address);
+      console.log('locaton:', location);
+  
+      // Append images to formData
       images.forEach((image, index) => {
         formData.append('images', {
           uri: image.uri,
@@ -173,27 +153,26 @@ const EditProperty = () => {
           name: `image${index}.jpg`,
         });
       });
-      
+  
+      // Append the rest of the data
       formData.append('category', selectedCategory);
       formData.append('location', location);
       formData.append('propertyName', propertyName);
       formData.append('propertyDescription', propertyDescription);
       formData.append('rentPrice', rentPrice);
-
       formData.append('propertySize', propertySize);
       formData.append('sizeUnit', sizeUnit);
-
       formData.append('bedrooms', bedrooms);
       formData.append('bathrooms', bathrooms);
-
+  
       if (features.length > 0) {
         formData.append('features', JSON.stringify(features));
       }
+  
       formData.append('locationLatLng', JSON.stringify(locationLatLng));
       formData.append('owner', userId);
-
-      console.log('FormData:', formData);
-      console.log('property id:', propertyId);
+  
+      // API call to update the property
       const response = await apiClient.put(
         `/property/${propertyId}`,
         formData,
@@ -201,16 +180,29 @@ const EditProperty = () => {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-        },
+        }
       );
-
+  
       alert('Property Updated Successfully!');
-      navigation.navigate('ManageProperty', {refresh: true});
+      navigation.navigate('ManageProperty', { refresh: true });
     } catch (error) {
-      console.error('Error adding property:', error);
-      alert('Error adding property. Please try again.');
+      setLoading(false); // Ensure loading state is reset
+      console.error('Error updating property:', error);
+      
+      // Handle network errors and display appropriate message
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        alert(`Error: ${error.response.data.message || 'An error occurred while updating the property.'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        alert('Network error. Please check your internet connection and try again.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        alert('An unexpected error occurred. Please try again.');
+      }
     }
   };
+  
 
   const handleIncrement = (setter, value) => {
     setter(String(parseInt(value) + 1)); // Ensure value is a string
@@ -382,22 +374,16 @@ const EditProperty = () => {
         {renderCategories()}
 
         <View>
-        <View>
-  <Text style={commonStyles.inputTitle}>Location</Text>
+          <View>
+            <Text style={commonStyles.inputTitle}>Location</Text>
 
-
-<TouchableOpacity
-  style={styles.changeLocationButton}
-  
-  onPress={() => navigation.navigate('Location', { mode: 'edit'})}
->
-  <Text style={styles.changeLocationText}>Change Location</Text>
-</TouchableOpacity>
-</View>
-
-
-</View>
-
+            <TouchableOpacity
+              style={styles.changeLocationButton}
+              onPress={() => navigation.navigate('Location', {mode: 'edit'})}>
+              <Text style={styles.changeLocationText}>Change Location</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <Text style={commonStyles.inputTitle}>Size</Text>
         <View style={commonStyles.inputWrapper}>
@@ -715,7 +701,7 @@ const styles = StyleSheet.create({
   },
   locationButtonText: {
     fontSize: 16,
-    padding:20,
+    padding: 20,
     fontFamily: fonts.semiBold,
   },
   sizeInput: {
@@ -782,18 +768,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     padding: 4,
   },
-changeLocationButton: {
-    fontFamily:fonts.bold,
+  changeLocationButton: {
+    fontFamily: fonts.bold,
     borderRadius: 20,
     backgroundColor: Colors.lightgrey,
     padding: 20,
   },
-  changeLocationText:{
+  changeLocationText: {
     fontSize: 16,
     fontFamily: fonts.regular,
-    Color:Colors.dark,
+    Color: Colors.dark,
   },
-
 });
 
 export default EditProperty;

@@ -16,7 +16,7 @@ import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import PropertyCard from './PropertyCard';
-
+import RatingCard from '../common/RatingCard';
 const placeholderImage =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
@@ -28,21 +28,26 @@ const LandlordProfile = ({navigation}) => {
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState([]);
   const [activeTab, setActiveTab] = useState('Listings');
-
+  const [ratings, setRatings] = useState([]); // State for ratings
   useEffect(() => {
     const fetchLandlordDetails = async () => {
       try {
         const response = await apiClient.get(`/property/${propertyId}`);
         const owner = response.data.property.owner;
-        const ownerId= response.data.property.owner._id
+        const ownerId = owner._id; // Get owner ID
         console.log('owner', owner);
         setLandlord(owner);
-        setContactNumber(landlord.contactNumber);
+        setContactNumber(owner.contactNumber);
 
         // Fetch properties by the landlord's ID
         const propertiesResponse = await apiClient.get(`property/properties/owner/${ownerId}`);
         console.log('Fetched properties:', propertiesResponse.data.properties);
         setProperties(propertiesResponse.data.properties);
+
+        // Fetch ratings for the landlord
+        const ratingsResponse = await apiClient.get(`/rating/ratings/${ownerId}`); // Adjust the endpoint as needed
+        console.log('Fetched ratings:', ratingsResponse.data);
+        setRatings(ratingsResponse.data);
       } catch (error) {
         console.error('Error fetching landlord details:', error);
       } finally {
@@ -54,6 +59,7 @@ const LandlordProfile = ({navigation}) => {
       fetchLandlordDetails();
     }
   }, [propertyId]);
+
   const handlePress = (propertyId) => {
     navigation.navigate('PropertyDetails', { propertyId });
   };
@@ -147,7 +153,17 @@ const LandlordProfile = ({navigation}) => {
             keyExtractor={(item) => item._id}
           />
         ) : (
-          <Text>Reviews content goes here</Text> // Replace with actual reviews content
+          <FlatList
+          scrollEnabled={false}
+          data={ratings.filter((item) => item.role === 'Landlord')}
+            renderItem={({ item }) => (
+              <RatingCard
+                rating={item.rating}
+                review={item.review}
+              />
+            )}
+            keyExtractor={(item) => item._id}
+          />
         )}
       </ScrollView>
     </View>

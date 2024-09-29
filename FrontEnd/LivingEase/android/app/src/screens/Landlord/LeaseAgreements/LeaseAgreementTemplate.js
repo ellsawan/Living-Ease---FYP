@@ -178,7 +178,7 @@ const LeaseAgreementTemplate = () => {
     `The tenancy period is from ${formatDate(tenancyStartDate)} to ${formatDate(
       tenancyEndDate,
     )}.`,
-    "One month's notice from either party for vacation of the property is mandatory.",
+   'The Landlord affirms that they are the rightful owner of the property and possess all necessary legal documentation, ensuring that the property meets legal requirements and has the necessary documentation.',
     'The Tenant shall not make any alterations to the property without the written prior approval of the Landlord.',
     'The Tenant shall not sub-let the property wholly or partially.',
     'The possession of the property will be handed over to the Landlord upon expiry of this agreement.',

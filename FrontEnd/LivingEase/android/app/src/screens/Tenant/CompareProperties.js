@@ -1,10 +1,9 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   Dimensions,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -13,23 +12,30 @@ import fonts from '../../constants/Font';
 import apiClient from '../../../../../apiClient';
 import Geolocation from '@react-native-community/geolocation';
 
-const CompareProperties = ({route}) => {
-  const {propertyIds} = route.params;
+const CompareProperties = ({ route }) => {
+  const { propertyIds } = route.params;
   const [properties, setProperties] = useState([]);
-  const [nearbyPlaces, setNearbyPlaces] = useState({schools: 0, hospitals: 0, restaurants: 0});
-  const {width: screenWidth} = Dimensions.get('window');
+  const [nearbyPlaces, setNearbyPlaces] = useState({});
+  const { width: screenWidth } = Dimensions.get('window');
 
   useEffect(() => {
     const fetchPropertyDetails = async () => {
       try {
         const propertyDetails = await Promise.all(
-          propertyIds.map(async id => {
+          propertyIds.map(async (id) => {
             const response = await apiClient.get(`property/${id}`);
             return response.data.property;
           }),
         );
         setProperties(propertyDetails);
-        fetchNearbyPlaces(propertyDetails[0].location); // Assuming the first property's location is used
+
+        // Fetch nearby places for each property
+        propertyDetails.forEach((property, index) => {
+          const { coordinates } = property.locationLatLng; // Extract the coordinates
+          const latitude = coordinates[1]; // Latitude is at index 1
+          const longitude = coordinates[0]; // Longitude is at index 0
+          fetchNearbyPlaces({ latitude, longitude }, index); // Pass the lat & long to fetchNearbyPlaces
+        });
       } catch (error) {
         console.error('Error fetching property details:', error);
       }
@@ -38,25 +44,54 @@ const CompareProperties = ({route}) => {
     fetchPropertyDetails();
   }, [propertyIds]);
 
-  const fetchNearbyPlaces = (location) => {
-    Geolocation.getCurrentPosition(async (position) => {
-      const {latitude, longitude} = position.coords;
-      const apiKey = 'AIzaSyCapL4yjDAZ76uB41u1dmYjNGkHs9PXDnQ'; // Replace with your Google Maps API key
+  const fetchNearbyPlaces = (location, index) => {
+    const { latitude, longitude } = location;
 
-      const schoolResponse = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=school&key=${apiKey}`);
-      const hospitalResponse = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=hospital&key=${apiKey}`);
-      const restaurantResponse = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=restaurant&key=${apiKey}`);
+    const apiKey = 'AIzaSyCapL4yjDAZ76uB41u1dmYjNGkHs9PXDnQ'; // Replace with your Google Maps API key
 
-      const schoolsData = await schoolResponse.json();
-      const hospitalsData = await hospitalResponse.json();
-      const restaurantsData = await restaurantResponse.json();
+    Promise.all([
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=school&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=hospital&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=restaurant&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=park&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=bank&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=gas_station&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=shopping_mall&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=gym&key=${apiKey}`),
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=pharmacy&key=${apiKey}`),
+    ])
+      .then(async (responses) => {
+        const [
+          schoolResponse,
+          hospitalResponse,
+          restaurantResponse,
+          parkResponse,
+          bankResponse,
+          gasStationResponse,
+          shoppingMallResponse,
+          gymResponse,
+          pharmacyResponse,
+        ] = await Promise.all(responses.map((res) => res.json()));
 
-      setNearbyPlaces({
-        schools: schoolsData.results.length,
-        hospitals: hospitalsData.results.length,
-        restaurants: restaurantsData.results.length,
+        // Store nearby places for each property by its index
+        setNearbyPlaces((prevNearbyPlaces) => ({
+          ...prevNearbyPlaces,
+          [index]: {
+            schools: schoolResponse.results.length,
+            hospitals: hospitalResponse.results.length,
+            restaurants: restaurantResponse.results.length,
+            parks: parkResponse.results.length,
+            banks: bankResponse.results.length,
+            gasStations: gasStationResponse.results.length,
+            shoppingMalls: shoppingMallResponse.results.length,
+            gyms: gymResponse.results.length,
+            pharmacies: pharmacyResponse.results.length,
+          },
+        }));
+      })
+      .catch((error) => {
+        console.error('Error fetching nearby places:', error);
       });
-    });
   };
 
   const featureIcons = {
@@ -71,76 +106,85 @@ const CompareProperties = ({route}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {properties.map((property, index) => (
-        <View key={index} style={styles.propertyContainer}>
-          <Image
-            source={{uri: property.images[0].uri || 'https://via.placeholder.com/150'}}
-            style={[styles.image, {width: screenWidth}]}
-          />
-
-          <View style={styles.detailsContainer}>
-            <View style={styles.titleRow}>
-              <Text style={styles.propertyName}>{property.propertyName}</Text>
-              <Text style={styles.propertyCategory}>{property.category}</Text>
-            </View>
-            <View style={styles.locationRow}>
-              <MaterialCommunityIcons name="map-marker" size={24} color={Colors.primary} />
-              <Text style={styles.propertyLocation}>{property.location}</Text>
-            </View>
-            <View style={styles.rentRow}>
-              <MaterialCommunityIcons name="cash" size={24} color={Colors.primary} />
-              <Text style={styles.propertyRent}>{property.rentPrice} / Month</Text>
-            </View>
-
-            <Text style={styles.featuresTitle}>Nearby Places</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuresScrollContainer}></ScrollView>
-            <View style={styles.nearbyPlacesContainer}>
-              <View style={styles.featureTile}>
-                <MaterialCommunityIcons name="school" size={30} color={Colors.primary} />
-                <Text style={styles.featureText}>{nearbyPlaces.schools} Schools</Text>
-              </View>
-              <View style={styles.featureTile}>
-                <MaterialCommunityIcons name="hospital" size={30} color={Colors.primary} />
-                <Text style={styles.featureText}>{nearbyPlaces.hospitals} Hospitals</Text>
-              </View>
-              <View style={styles.featureTile}>
-                <MaterialCommunityIcons name="food-fork-drink" size={30} color={Colors.primary} />
-                <Text style={styles.featureText}>{nearbyPlaces.restaurants} Restaurants</Text>
-             
-              </View>
-              
-            </View>
-
+      <View style={styles.comparisonContainer}>
+        {properties.map((property, index) => (
+          <View key={index} style={styles.propertyColumn}>
+            <Text style={styles.featuresTitle}>Property Name</Text>
+            <Text style={styles.propertyName}>{property.propertyName}</Text>
+            <Text style={styles.featuresTitle}>Property Category</Text>
+            <Text style={styles.propertyCategory}>{property.category}</Text>
+            <View style={styles.line} />
+            <Text style={styles.featuresTitle}>Monthly Rent</Text>
+            <Text style={styles.propertyRent}>
+              {property.rentPrice}
+            </Text>
+            <View style={styles.line} />
             <Text style={styles.featuresTitle}>Features</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuresScrollContainer}>
-              {property.bedrooms && (
-                <View style={styles.featureTile}>
-                  <MaterialCommunityIcons name="bed" size={30} color={Colors.primary} />
-                  <Text style={styles.featureText}>{property.bedrooms} Bedrooms</Text>
-                </View>
-              )}
-              {property.bathrooms && (
-                <View style={styles.featureTile}>
-                  <MaterialCommunityIcons name="shower" size={30} color={Colors.primary} />
-                  <Text style={styles.featureText}>{property.bathrooms} Bathrooms</Text>
-                </View>
-              )}
-              {property.propertySize && (
-                <View style={styles.featureTile}>
-                  <MaterialCommunityIcons name="ruler" size={30} color={Colors.primary} />
-                  <Text style={styles.featureText}>{property.propertySize} {property.sizeUnit}</Text>
-                </View>
-              )}
-              {property.features.length > 0 && property.features.map((feature, index) => (
-                <View key={index} style={styles.featureTile}>
-                  <MaterialCommunityIcons name={featureIcons[feature] || 'star-outline'} size={30} color={Colors.primary} />
+            {property.bedrooms && (
+              <View style={styles.featureRow}>
+                <MaterialCommunityIcons name="bed" size={20} color={Colors.primary} />
+                <Text style={styles.featureText}>{property.bedrooms} Bedrooms</Text>
+              </View>
+            )}
+            {property.bathrooms && (
+              <View style={styles.featureRow}>
+                <MaterialCommunityIcons name="shower" size={20} color={Colors.primary} />
+                <Text style={styles.featureText}>{property.bathrooms} Bathrooms</Text>
+              </View>
+            )}
+            {property.propertySize && (
+              <View style={styles.featureRow}>
+                <MaterialCommunityIcons name="ruler" size={20} color={Colors.primary} />
+                <Text style={styles.featureText}>
+                  {property.propertySize} {property.sizeUnit}
+                </Text>
+              </View>
+            )}
+            {property.features.length > 0 &&
+              property.features.map((feature, featureIndex) => (
+                <View key={featureIndex} style={styles.featureRow}>
+                  <MaterialCommunityIcons
+                    name={featureIcons[feature] || 'star-outline'}
+                    size={20}
+                    color={Colors.primary}
+                  />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}
-            </ScrollView>
+            <View style={styles.line} />
+            <Text style={styles.featuresTitle}>Nearby Places</Text>
+
+            {nearbyPlaces[index] && (
+              <>
+                <View style={styles.featureRow}>
+                  <MaterialCommunityIcons name="tree" size={20} color={Colors.primary} />
+                  <Text style={styles.featureText}>{nearbyPlaces[index].parks} Parks</Text>
+                </View>
+                <View style={styles.featureRow}>
+                  <MaterialCommunityIcons name="bank" size={20} color={Colors.primary} />
+                  <Text style={styles.featureText}>{nearbyPlaces[index].banks} Banks</Text>
+                </View>
+                <View style={styles.featureRow}>
+                  <MaterialCommunityIcons name="gas-station" size={20} color={Colors.primary} />
+                  <Text style={styles.featureText}>{nearbyPlaces[index].gasStations} Gas Stations</Text>
+                </View>
+                <View style={styles.featureRow}>
+                  <MaterialCommunityIcons name="shopping" size={20} color={Colors.primary} />
+                  <Text style={styles.featureText}>{nearbyPlaces[index].shoppingMalls} Shopping Malls</Text>
+                </View>
+                <View style={styles.featureRow}>
+                  <MaterialCommunityIcons name="weight-lifter" size={20} color={Colors.primary} />
+                  <Text style={styles.featureText}>{nearbyPlaces[index].gyms} Gyms</Text>
+                </View>
+                <View style={styles.featureRow}>
+                  <MaterialCommunityIcons name="pill" size={20} color={Colors.primary} />
+                  <Text style={styles.featureText}>{nearbyPlaces[index].pharmacies} Pharmacies</Text>
+                </View>
+              </>
+            )}
           </View>
-        </View>
-      ))}
+        ))}
+      </View>
     </ScrollView>
   );
 };
@@ -151,88 +195,61 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: Colors.white,
   },
-  propertyContainer: {
-    backgroundColor: Colors.white,
-    marginBottom: 20,
-    borderRadius: 10,
-    overflow: 'hidden',
-    elevation: 5,
-  },
-  image: {
-    height: 250,
-    resizeMode: 'cover',
-  },
-  detailsContainer: {
-    padding: 15,
-  },
-  titleRow: {
+  comparisonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    width: '100%',
+  },
+  propertyColumn: {
+    flex: 1,
+    marginHorizontal: 10,
+    padding: 10,
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
   },
   propertyName: {
-    fontSize: 20,
+    fontSize: 16,
     fontFamily: fonts.bold,
     color: Colors.darkText,
+    marginBottom: 10,
   },
   propertyCategory: {
-    fontSize: 16,
-    fontFamily: fonts.regular,
-    color: Colors.gray,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  propertyLocation: {
     fontSize: 14,
     fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginLeft: 10,
-  },
-  rentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 10,
   },
   propertyRent: {
     fontSize: 16,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.semiBold,
     color: Colors.primary,
-    marginLeft: 10,
-  },
-  featuresTitle: {
-    fontSize: 16,
-    fontFamily: fonts.bold,
-    color: Colors.blue,
-    marginTop: 10,
-  },
-  nearbyPlacesContainer: {
-    flexDirection: 'row',
     marginBottom: 10,
   },
-  featuresScrollContainer: {
-    flexDirection: 'row',
-    paddingBottom: 10,
+  featuresTitle: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: Colors.darkText,
+    marginBottom: 5,
   },
-  featureTile: {
+  line: {
+    height: 1,
     backgroundColor: Colors.lightgrey,
-    padding: 20,
-    borderRadius: 10,
+    marginVertical: 10,
+  },
+  featureRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: 120,
-    height: 100,
-    marginRight: 10,
+    marginBottom: 5,
   },
   featureText: {
     fontSize: 14,
     fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginTop: 5,
-    textAlign: 'center',
+    marginLeft: 5,
   },
 });
 

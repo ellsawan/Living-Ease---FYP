@@ -18,11 +18,26 @@ const SignUpScreen = ({ route, navigation }) => {
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
     const trimmedContactNumber = `+92 ${contactNumber.trim()}`; // Add +92 prefix
-
+    const phoneRegex = /^[0-9]{10}$/; // Exactly 10 digits for phone number
+    const nameRegex = /^[A-Za-z]+$/; // Only letters, no spaces or numbers
     if (!trimmedFirstName || !trimmedLastName || !email || !password || !contactNumber) {
       Alert.alert('Missing Fields', 'All fields are required and cannot be just spaces.');
       return;
     }
+ // Validate first and last names (no spaces or numbers)
+ if (!nameRegex.test(trimmedFirstName)) {
+  Alert.alert('Invalid First Name', 'First name should contain only letters without spaces or numbers.');
+  return;
+}
+if (!nameRegex.test(trimmedLastName)) {
+  Alert.alert('Invalid Last Name', 'Last name should contain only letters without spaces or numbers.');
+  return;
+}
+ // Validate contact number (10 digits after +92)
+ if (!phoneRegex.test(contactNumber)) {
+  Alert.alert('Invalid Phone Number', 'Contact number must be exactly 10 digits.');
+  return;
+}
 
     // Validate email and password
     if (!email.includes('@')) {

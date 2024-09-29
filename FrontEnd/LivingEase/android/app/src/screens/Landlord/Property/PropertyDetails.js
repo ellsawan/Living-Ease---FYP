@@ -189,15 +189,18 @@ const PropertyDetails = () => {
           </>
         )}
       </View>
+
       {/* Buttons Container */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleEdit}>
-          <Text style={styles.buttonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleDelete}>
-          <Text style={styles.buttonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
+      {!property.status.toLowerCase().includes('rented') && ( // Check if the status is not rented
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={handleEdit}>
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleDelete}>
+            <Text style={styles.buttonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -291,15 +294,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryContainer: {
-    backgroundColor: Colors.gray,
+    backgroundColor: Colors.lightgrey,
     borderRadius: 15,
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
   categoryText: {
-    color: Colors.primary,
     fontSize: 14,
     fontFamily: fonts.semiBold,
+    color: Colors.primary,
   },
   row: {
     flexDirection: 'row',
@@ -307,39 +310,34 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   value: {
+    marginLeft: 5,
     fontSize: 16,
     fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginLeft: 10,
   },
   detailsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   detailItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
-    marginBottom: 10,
   },
   detailTitle: {
     fontSize: 14,
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginLeft: 5,
   },
   detailValue: {
     fontSize: 16,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.semiBold,
     color: Colors.darkText,
-    marginLeft: 5,
   },
   featuresTitle: {
     fontSize: 18,
     fontFamily: fonts.bold,
     color: Colors.darkText,
-    marginBottom: 10,
+    marginVertical: 10,
   },
   description: {
     fontSize: 16,
@@ -353,10 +351,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   featureText: {
-    fontSize: 16,
+    marginLeft: 5,
+    fontSize: 14,
     fontFamily: fonts.regular,
     color: Colors.darkText,
-    marginLeft: 5,
   },
 });
 

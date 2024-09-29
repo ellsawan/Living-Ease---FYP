@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import axios from 'axios';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font'; // Adjust the path as needed
 
-const NearbyAmenities = ({ latitude, longitude }) => {
+const NearbyAmenities = ({latitude, longitude}) => {
   const [schools, setSchools] = useState([]);
   const [hospitals, setHospitals] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
@@ -14,40 +21,38 @@ const NearbyAmenities = ({ latitude, longitude }) => {
 
   useEffect(() => {
     const fetchNearbyAmenities = async () => {
-      const apiKey = 'AIzaSyCapL4yjDAZ76uB41u1dmYjNGkHs9PXDnQ'; 
+      const apiKey = 'AIzaSyCapL4yjDAZ76uB41u1dmYjNGkHs9PXDnQ';
       const radius = 1500; // Search radius in meters
-  
+
       try {
         // Fetch schools
         const schoolResponse = await axios.get(
-          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=school&key=${apiKey}`
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=school&key=${apiKey}`,
         );
         setSchools(schoolResponse.data.results);
-  
+
         // Fetch hospitals
         const hospitalResponse = await axios.get(
-          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=hospital&key=${apiKey}`
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=hospital&key=${apiKey}`,
         );
         setHospitals(hospitalResponse.data.results);
-  
+
         // Fetch restaurants
         const restaurantResponse = await axios.get(
-          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=restaurant&key=${apiKey}`
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=restaurant&key=${apiKey}`,
         );
         setRestaurants(restaurantResponse.data.results);
-  
       } catch (error) {
         console.error('Error fetching nearby amenities:', error);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchNearbyAmenities();
   }, [latitude, longitude]);
-  
 
-  const getIconForType = (type) => {
+  const getIconForType = type => {
     switch (type) {
       case 'schools':
         return 'school';
@@ -60,12 +65,12 @@ const NearbyAmenities = ({ latitude, longitude }) => {
     }
   };
 
-  const cleanAddress = (address) => {
+  const cleanAddress = address => {
     // Regex to remove postal codes or numbers at the end
     return address.replace(/\d{5}(?:[-\s]\d{4})?$/, '').trim();
   };
-  
-  const renderAmenityItem = (item) => (
+
+  const renderAmenityItem = item => (
     <View key={item.place_id} style={styles.amenityItem}>
       <View style={styles.amenityHeader}>
         <MaterialCommunityIcons
@@ -87,7 +92,7 @@ const NearbyAmenities = ({ latitude, longitude }) => {
     </View>
   );
 
-  const renderAmenityList = (data) => (
+  const renderAmenityList = data => (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {data.length > 0 ? data.map(renderAmenityItem) : renderNoResultsMessage()}
     </ScrollView>
@@ -108,23 +113,44 @@ const NearbyAmenities = ({ latitude, longitude }) => {
   return (
     <View style={styles.container}>
       <View style={styles.tabsContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'schools' && styles.activeTab]}
-          onPress={() => setActiveTab('schools')}
-        >
-          <Text style={[styles.tabText, activeTab === 'schools' ? { color: Colors.primary } : { color: Colors.placeholdertext }]}>Schools</Text>
+          onPress={() => setActiveTab('schools')}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'schools'
+                ? {color: Colors.primary}
+                : {color: Colors.placeholdertext},
+            ]}>
+            Schools
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'hospitals' && styles.activeTab]}
-          onPress={() => setActiveTab('hospitals')}
-        >
-          <Text style={[styles.tabText, activeTab === 'hospitals' ? { color: Colors.primary } : { color: Colors.placeholdertext}]}>Hospitals</Text>
+          onPress={() => setActiveTab('hospitals')}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'hospitals'
+                ? {color: Colors.primary}
+                : {color: Colors.placeholdertext},
+            ]}>
+            Hospitals
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'restaurants' && styles.activeTab]}
-          onPress={() => setActiveTab('restaurants')}
-        >
-          <Text style={[styles.tabText, activeTab === 'restaurants' ? { color: Colors.primary } : { color: Colors.placeholdertext }]}>Restaurants</Text>
+          onPress={() => setActiveTab('restaurants')}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'restaurants'
+                ? {color: Colors.primary}
+                : {color: Colors.placeholdertext},
+            ]}>
+            Restaurants
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -175,8 +201,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
   },
-  scrollContainer: {
-  },
+  scrollContainer: {},
   amenityItem: {
     marginTop: 10,
     marginBottom: 10,

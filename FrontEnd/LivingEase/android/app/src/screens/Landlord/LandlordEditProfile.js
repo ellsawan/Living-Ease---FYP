@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -13,20 +13,20 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import commonStyles from '../../constants/styles';
 import fonts from '../../constants/Font';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import apiClient from '../../../../../apiClient';
 
-const EditProfileScreen = ({ navigation }) => {
+const EditProfileScreen = ({navigation}) => {
   const [contactNumber, setContactNumber] = useState('');
   const [profileImage, setProfileImage] = useState(
-    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
   );
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const phoneRegex = /^[0-9]{10}$/;
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -38,7 +38,7 @@ const EditProfileScreen = ({ navigation }) => {
         setContactNumber(userData.contactNumber.replace('+92 ', '')); // Remove +92 prefix
         setProfileImage(
           userData.profileImage ||
-          'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
         );
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -97,15 +97,29 @@ const EditProfileScreen = ({ navigation }) => {
       'Select Image Source',
       'Choose an option',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: handleCamera },
-        { text: 'Choose from Library', onPress: handleImagePicker },
+        {text: 'Cancel', style: 'cancel'},
+        {text: 'Take Photo', onPress: handleCamera},
+        {text: 'Choose from Library', onPress: handleImagePicker},
       ],
-      { cancelable: true }
+      {cancelable: true},
     );
   };
 
   const handleSave = async () => {
+    if (!email.includes('@')) {
+      Alert.alert(
+        'Invalid Email',
+        'Please enter a valid email address. It must contain "@" symbol.',
+      );
+      return;
+    }
+    if (!phoneRegex.test(contactNumber)) {
+      Alert.alert(
+        'Invalid Phone Number',
+        'Contact number must be exactly 10 digits.',
+      );
+      return;
+    }
     try {
       setLoading(true);
       const trimmedContactNumber = `+92 ${contactNumber.trim()}`; // Add +92 prefix
@@ -119,7 +133,7 @@ const EditProfileScreen = ({ navigation }) => {
       if (
         profileImage &&
         profileImage !==
-        'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+          'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
       ) {
         formData.append('image', {
           uri: profileImage,
@@ -147,7 +161,7 @@ const EditProfileScreen = ({ navigation }) => {
       ) {
         Alert.alert(
           'Error',
-          'This email is already in use. Please use another email.'
+          'This email is already in use. Please use another email.',
         );
       } else {
         Alert.alert('Error', 'Failed to update profile');
@@ -157,7 +171,7 @@ const EditProfileScreen = ({ navigation }) => {
     }
   };
 
-  const handleContactNumberChange = (text) => {
+  const handleContactNumberChange = text => {
     const cleanedText = text.replace(/[^0-9]/g, '');
     setContactNumber(cleanedText);
   };
@@ -167,14 +181,13 @@ const EditProfileScreen = ({ navigation }) => {
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={handleImageSourceSelection}>
           <Image
-            source={{ uri: profileImage }}
+            source={{uri: profileImage}}
             style={styles.profilePicture}
             resizeMode="cover"
           />
           <TouchableOpacity
             style={styles.cameraButton}
-            onPress={handleImageSourceSelection}
-          >
+            onPress={handleImageSourceSelection}>
             <Icon name="camera" size={20} color={Colors.white} />
           </TouchableOpacity>
         </TouchableOpacity>
@@ -193,7 +206,7 @@ const EditProfileScreen = ({ navigation }) => {
             style={commonStyles.icon}
           />
           <TextInput
-            style={[commonStyles.inputField, { flex: 1 }]}
+            style={[commonStyles.inputField, {flex: 1}]}
             placeholder="First Name"
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setFirstName}
@@ -211,7 +224,7 @@ const EditProfileScreen = ({ navigation }) => {
             style={commonStyles.icon}
           />
           <TextInput
-            style={[commonStyles.inputField, { flex: 1 }]}
+            style={[commonStyles.inputField, {flex: 1}]}
             placeholder="Last Name"
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setLastName}
@@ -229,7 +242,7 @@ const EditProfileScreen = ({ navigation }) => {
             style={commonStyles.icon}
           />
           <TextInput
-            style={[commonStyles.inputField, { flex: 1 }]}
+            style={[commonStyles.inputField, {flex: 1}]}
             placeholder="Email"
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={setEmail}
@@ -237,15 +250,24 @@ const EditProfileScreen = ({ navigation }) => {
             keyboardType="email-address"
           />
           {error && error.email && (
-            <Text style={{ color: 'red', fontSize: 12 }}>{error.email}</Text>
+            <Text style={{color: 'red', fontSize: 12}}>{error.email}</Text>
           )}
         </View>
 
         <Text style={commonStyles.inputTitle}>Contact Number</Text>
         <View style={commonStyles.inputWrapper}>
-          <Text style={{ position: 'absolute', left: 20, top: 15, color: Colors.dark, fontSize: 18 }}>+92 </Text>
+          <Text
+            style={{
+              position: 'absolute',
+              left: 20,
+              top: 15,
+              color: Colors.dark,
+              fontSize: 18,
+            }}>
+            +92{' '}
+          </Text>
           <TextInput
-            style={[commonStyles.inputField, { flex: 1, paddingLeft: 50 }]}
+            style={[commonStyles.inputField, {flex: 1, paddingLeft: 50}]}
             placeholder=""
             placeholderTextColor={Colors.placeholdertext}
             onChangeText={handleContactNumberChange}

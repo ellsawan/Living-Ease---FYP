@@ -8,6 +8,7 @@ import {
   ScrollView,
   Modal,
   FlatList,
+  Alert,
 } from 'react-native';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
@@ -116,15 +117,51 @@ const SearchFilter = ({route}) => {
   };
 
   const handleSearch = async () => {
+    // Validate rent and property size inputs
+    const minRent = parseFloat(minRentPrice);
+    const maxRent = parseFloat(maxRentPrice);
+    const minProperty = parseFloat(minPropertySize);
+    const maxProperty = parseFloat(maxPropertySize);
+  
+    if ((minRentPrice && isNaN(minRent)) || (maxRentPrice && isNaN(maxRent))) {
+      Alert.alert('Error', 'Rent values must be numeric.');
+      return;
+    }
+  
+    if ((minPropertySize && isNaN(minProperty)) || (maxPropertySize && isNaN(maxProperty))) {
+      Alert.alert('Error', 'Property size values must be numeric.');
+      return;
+    }
+  
+    if (minRentPrice && maxRentPrice && minRent > maxRent) {
+      Alert.alert('Error', 'Maximum rent cannot be less than minimum rent.');
+      return;
+    }
+  
+    if (minPropertySize && maxPropertySize && minProperty > maxProperty) {
+      Alert.alert('Error', 'Maximum property size cannot be less than minimum property size.');
+      return;
+    }
+  
     const searchParams = {
       propertyType,
       category: category.join(', '),
-      minRentPrice,
-      maxRentPrice,
-      bedrooms: selectedBedrooms === '10+' ? '10_or_more' : selectedBedrooms ? parseInt(selectedBedrooms, 10) : undefined,
-      bathrooms: selectedBathrooms === '6+' ? '6_or_more' : selectedBathrooms ? parseInt(selectedBathrooms, 10) : undefined,
-      minPropertySize,
-      maxPropertySize,
+      minRentPrice: minRentPrice ? minRentPrice : undefined,
+      maxRentPrice: maxRentPrice ? maxRentPrice : undefined,
+      bedrooms:
+        selectedBedrooms === '10+'
+          ? '10_or_more'
+          : selectedBedrooms
+          ? parseInt(selectedBedrooms, 10)
+          : undefined,
+      bathrooms:
+        selectedBathrooms === '6+'
+          ? '6_or_more'
+          : selectedBathrooms
+          ? parseInt(selectedBathrooms, 10)
+          : undefined,
+      minPropertySize: minPropertySize ? minPropertySize : undefined,
+      maxPropertySize: maxPropertySize ? maxPropertySize : undefined,
       sizeUnit,
       location,
       longitude: locationLatLng?.coordinates?.[0] || '',
@@ -134,8 +171,7 @@ const SearchFilter = ({route}) => {
   
     // Filter out undefined and null values
     const filteredSearchParams = {};
-  
-    Object.keys(searchParams).forEach((key) => {
+    Object.keys(searchParams).forEach(key => {
       const value = searchParams[key];
       if (value !== '' && value !== undefined && value !== null) {
         filteredSearchParams[key] = value;
@@ -155,8 +191,6 @@ const SearchFilter = ({route}) => {
   };
   
   
-  
-
   const handleSizeUnitSelect = unit => {
     setSelectedSizeUnit(unit);
     setSizeUnit(unit);
@@ -172,16 +206,14 @@ const SearchFilter = ({route}) => {
   );
 
   const renderCategoryButtons = () => {
-    const categories =
-       residentialCategories;
+    const categories = residentialCategories;
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <TouchableOpacity
           style={[
             styles.categoryButton,
-            category.length ===
-                 residentialCategories.length
-               && styles.categoryButtonActive,
+            category.length === residentialCategories.length &&
+              styles.categoryButtonActive,
           ]}
           onPress={handleSelectAllCategories}>
           <Text style={styles.categoryButtonText}>All</Text>
@@ -200,11 +232,16 @@ const SearchFilter = ({route}) => {
       </ScrollView>
     );
   };
-  const renderHorizontalOptions = (options, selectedOption, setSelectedOption, label) => (
+  const renderHorizontalOptions = (
+    options,
+    selectedOption,
+    setSelectedOption,
+    label,
+  ) => (
     <View style={styles.inputWrapper}>
       <Text style={commonStyles.inputTitle}>{label}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {options.map((option) => (
+        {options.map(option => (
           <TouchableOpacity
             key={option}
             style={[
@@ -218,19 +255,16 @@ const SearchFilter = ({route}) => {
               } else {
                 setSelectedOption(option);
               }
-            }}
-          >
+            }}>
             <Text style={styles.optionButtonText}>{option}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
   );
-  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-   
-
       {/* Category */}
       <View style={styles.inputWrapper}>
         <Text style={commonStyles.inputTitle}>Property Category</Text>
@@ -272,13 +306,23 @@ const SearchFilter = ({route}) => {
       {/* Bedrooms */}
       {propertyType === 'Residential' && (
         <>
-     {renderHorizontalOptions(bedroomOptions, selectedBedrooms, setSelectedBedrooms, 'Bedrooms')}
-    
-      {/* Bathrooms */}
-   
-       {/* Bathrooms */}
-      {renderHorizontalOptions(bathroomOptions, selectedBathrooms, setSelectedBathrooms, 'Bathrooms')}
-      </>
+          {renderHorizontalOptions(
+            bedroomOptions,
+            selectedBedrooms,
+            setSelectedBedrooms,
+            'Bedrooms',
+          )}
+
+          {/* Bathrooms */}
+
+          {/* Bathrooms */}
+          {renderHorizontalOptions(
+            bathroomOptions,
+            selectedBathrooms,
+            setSelectedBathrooms,
+            'Bathrooms',
+          )}
+        </>
       )}
 
       {/* Property Size Range */}
@@ -338,15 +382,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: Colors.background,
     padding: 15,
-    
   },
   sizeRangeWrapper: {
-    flexDirection: 'row', 
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center', 
-    marginBottom: 10, 
+    alignItems: 'center',
+    marginBottom: 10,
   },
- 
+
   sizeUnitButtonText: {
     color: Colors.white, // Text color
     fontFamily: fonts.semiBold,
@@ -354,7 +397,6 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     marginBottom: 20,
-   
   },
   inputTitle: {
     fontSize: 18,
@@ -364,7 +406,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 50,
-   backgroundColor:Colors.lightgrey,
+    backgroundColor: Colors.lightgrey,
     borderRadius: 20,
     paddingHorizontal: 10,
     fontFamily: fonts.regular,
@@ -380,7 +422,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    backgroundColor:Colors.lightgrey,
+    backgroundColor: Colors.lightgrey,
     borderColor: Colors.gray,
     marginRight: 10,
     marginBottom: 10,
@@ -397,7 +439,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    backgroundColor:Colors.lightgrey,
+    backgroundColor: Colors.lightgrey,
     borderColor: Colors.gray,
     marginRight: 10,
     marginBottom: 10,
@@ -445,7 +487,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.placeholdertext,
   },
- 
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -475,17 +517,14 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   optionButtonActive: {
-    
-    borderRadius:20,
-    borderWidth:1.5,
-    borderColor:Colors.primary,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
   },
   optionButtonText: {
     color: Colors.darkText,
     fontFamily: fonts.semiBold,
   },
- 
- 
 });
 
 export default SearchFilter;

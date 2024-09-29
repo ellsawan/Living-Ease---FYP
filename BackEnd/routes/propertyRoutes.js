@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addProperty, addPropertyController,updateProperty,updatePropertyController,searchProperties,getPropertiesByOwnerController,getPropertyByIdController ,deletePropertyController,getPropertiesByUserController} = require('../controllers/propertyController');
+const { addProperty, addPropertyController,updateProperty,setRentedByController,getRentedPropertyByTenantIdController,updatePropertyController,changePropertyStatusToRentedController,searchProperties,getPropertiesByOwnerController,getPropertyByIdController ,deletePropertyController,getPropertiesByUserController} = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 //Route to search properties
 router.get('/search', searchProperties);
@@ -16,5 +16,10 @@ router.get('/owner', protect, getPropertiesByUserController);
 router.get('/properties/owner/:ownerId', getPropertiesByOwnerController);
 // Route to get property by ID
 router.get('/:propertyId', getPropertyByIdController);
-
+// Route to change property status to 'rented'
+router.put("/:propertyId/status/rented", protect,changePropertyStatusToRentedController);
+// Route to associate a tenant with a property
+router.post("/setRentedBy", protect,setRentedByController);
+// Route to get rented property by tenant ID
+router.get("/:tenantId/rented-property", getRentedPropertyByTenantIdController);
 module.exports = router;

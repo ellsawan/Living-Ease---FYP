@@ -367,4 +367,81 @@ exports.searchProperties = async function(req, res) {
     res.status(500).json({ message: 'An error occurred while searching for properties' });
   }
 };
+// Controller method to change property status to 'rented'
+exports.changePropertyStatusToRentedController = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
+  try {
+    const { propertyId } = req.params; // Get property ID from the request parameters
+
+    // Find the existing property
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    // Update the property status to 'rented'
+    property.status = 'rented';
+    await property.save();
+
+    return res.status(200).json({
+      message: "Property status updated to rented successfully",
+      property,
+    });
+  } catch (error) {
+    console.error("Error updating property status:", error);
+    return res.status(500).json({ error: "Error updating property status", message: error.message });
+  }
+};
+exports.setRentedByController = async (req, res) => {
+  const { propertyId, tenantId } = req.body;
+
+  // Validate input
+  if (!propertyId || !tenantId) {
+    return res.status(400).json({ error: "Property ID and Tenant ID are required" });
+  }
+
+  try {
+    // Find the property by ID and update the rentedBy field
+    const property = await Property.findByIdAndUpdate(
+      propertyId,
+      { rentedBy: tenantId },
+      { new: true, runValidators: true } // Returns the updated property
+    );
+
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    return res.status(200).json({
+      message: "Rented by field updated successfully",
+      property,
+    });
+  } catch (error) {
+    console.error("Error updating rentedBy:", error);
+    return res.status(500).json({ error: "Error updating rentedBy field", message: error.message });
+  }
+};
+
+exports.getRentedPropertyByTenantIdController = async (req, res) => {
+  const { tenantId } = req.params; // Get tenant ID from the request parameters
+
+  try {
+    // Find the property where the rentedBy field matches the tenant's ID
+    const rentedProperty = await Property.findOne({ rentedBy: tenantId }).populate('rentedBy');
+
+    if (!rentedProperty) {
+      return res.status(404).json({ message: "No property rented by this tenant." });
+    }
+
+    return res.status(200).json({
+      message: "Rented property retrieved successfully",
+      property: rentedProperty,
+    });
+  } catch (error) {
+    console.error("Error retrieving rented property:", error);
+    return res.status(500).json({ error: "Error retrieving rented property", message: error.message });
+  }
+};

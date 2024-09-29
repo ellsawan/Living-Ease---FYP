@@ -66,7 +66,7 @@ const AuthNavigator = () => {
          <Stack.Screen
           name="VerifyOTP"
           component={VerifyOTP}
-          options={{headerShown: false}}
+          options={{headerShown: true}}
         />
         <Stack.Screen
           name="TenantDashboard"

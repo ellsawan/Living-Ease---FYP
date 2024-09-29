@@ -65,6 +65,32 @@ const AddProperty = ({route}) => {
   };
   const handleSubmit = async () => {
     setLoading(true);
+    const numericPattern = /^[0-9]+$/; // Only digits, no symbols, spaces, or non-numeric characters
+  
+    // Check if property size is non-numeric or contains symbols
+    if (!numericPattern.test(propertySize)) {
+      setLoading(false);
+      alert('Property size must be a valid number without symbols, spaces, or non-numeric characters.');
+      return;
+    }
+    if (images.length === 0) {
+      setLoading(false);
+      alert('Please upload at least one image.');
+      return;
+    }
+    // Check if rentPrice is non-numeric or contains symbols
+    if (!numericPattern.test(rentPrice)) {
+      setLoading(false);
+      alert('Rent price must be a valid number without symbols, spaces, or non-numeric characters.');
+      return;
+    }
+  
+    // Check if location is selected
+    if (!address || address === 'Select Location on Maps') {
+      setLoading(false);
+      alert('Please select a location.');
+      return;
+    }
     
     if (
       !selectedCategory ||
@@ -72,9 +98,9 @@ const AddProperty = ({route}) => {
       !propertyName ||
       !propertyDescription ||
       !rentPrice ||
+      !images ||
       !propertySize ||
       !sizeUnit 
-      
     ) {
       setLoading(false);
       alert('Please fill in all fields');
@@ -98,16 +124,15 @@ const AddProperty = ({route}) => {
       formData.append('propertyName', propertyName);
       formData.append('propertyDescription', propertyDescription);
       formData.append('rentPrice', rentPrice);
-  
- 
-        formData.append('bedrooms', bedrooms);
-        formData.append('bathrooms', bathrooms);
-  
+      formData.append('bedrooms', bedrooms);
+      formData.append('bathrooms', bathrooms);
       formData.append('propertySize', propertySize);
       formData.append('sizeUnit', sizeUnit);
+      
       if (features.length > 0) {
         formData.append('features', JSON.stringify(features));
       }
+      
       formData.append('locationLatLng', JSON.stringify(locationLatLng));
       formData.append('owner', userId);
   
@@ -122,14 +147,27 @@ const AddProperty = ({route}) => {
       console.log(response.data);
       alert('Property added successfully!');
       navigation.navigate('ManageProperty', { refresh: true });
+  
     } catch (error) {
       console.error('Error adding property:', error);
-      alert('Error adding property. Please try again.');
+  
+      // Enhanced error handling
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        alert(`Error: ${error.response.data.message || 'An error occurred. Please try again.'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        alert('Network error. Please check your internet connection and try again.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        alert(`Error: ${error.message}`);
+      }
     } finally {
       setLoading(false); // Ensure loading state is reset
     }
-    
   };
+  
   
   
 

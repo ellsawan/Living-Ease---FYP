@@ -35,7 +35,7 @@ const DashboardScreen = () => {
           title="My Property"
           icon="home"
           description="View details of your rental home."
-          onPress={() => navigation.navigate('ManageProperty')}
+          onPress={() => navigation.navigate('MyProperty')}
         />
         <DashboardCard
           title="My Visits"

@@ -13,9 +13,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native'; // Import useFocusEffect
 import apiClient from '../../../../../apiClient';
 import mime from 'mime';
+
 const SettingsScreen = () => {
   const [profilePicture, setProfilePicture] = useState(
     'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
@@ -26,70 +27,74 @@ const SettingsScreen = () => {
   const [error, setError] = useState(null);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
-          // Fetch profile image
-          try {
-            const profileImageResponse = await apiClient.get(
-              '/user/profile-image',
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
+  const fetchProfileData = async () => {
+    setLoading(true); // Set loading state before fetching
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        // Fetch profile image
+        try {
+          const profileImageResponse = await apiClient.get(
+            '/user/profile-image',
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
               },
-            );
+            },
+          );
 
-            if (
-              profileImageResponse.status === 200 &&
-              profileImageResponse.data.profileImageUrl
-            ) {
-              setProfilePicture(profileImageResponse.data.profileImageUrl);
-            } else {
-              setProfilePicture(
-                'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
-              );
-            }
-          } catch (profileImageError) {
-            console.log('Error fetching profile image:', profileImageError);
+          if (
+            profileImageResponse.status === 200 &&
+            profileImageResponse.data.profileImageUrl
+          ) {
+            setProfilePicture(profileImageResponse.data.profileImageUrl);
+          } else {
             setProfilePicture(
               'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
             );
           }
+        } catch (profileImageError) {
+          console.log('Error fetching profile image:', profileImageError);
+          setProfilePicture(
+            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+          );
+        }
 
-          // Fetch user name
-          try {
-            const nameResponse = await apiClient.get('/user/name', {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
+        // Fetch user name
+        try {
+          const nameResponse = await apiClient.get('/user/name', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
-            if (nameResponse.status === 200) {
-              setFirstName(nameResponse.data.firstName || '');
-              setLastName(nameResponse.data.lastName || '');
-            } else {
-              setError('Failed to fetch user name');
-            }
-          } catch (nameError) {
-            console.error('Error fetching user name:', nameError);
+          if (nameResponse.status === 200) {
+            setFirstName(nameResponse.data.firstName || '');
+            setLastName(nameResponse.data.lastName || '');
+          } else {
             setError('Failed to fetch user name');
           }
-        } else {
-          setError('No token found');
+        } catch (nameError) {
+          console.error('Error fetching user name:', nameError);
+          setError('Failed to fetch user name');
         }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('An error occurred while fetching data');
-      } finally {
-        setLoading(false);
+      } else {
+        setError('No token found');
       }
-    };
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('An error occurred while fetching data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProfileData();
-  }, []);
+  // Use useFocusEffect to refresh data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchProfileData(); // Fetch profile data when screen is focused
+    }, [])
+  );
 
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.primary} />;
@@ -232,7 +237,7 @@ const SettingsScreen = () => {
       <View style={styles.optionsContainer}>
         <TouchableOpacity
           style={styles.option}
-          onPress={() => console.log('Public Profile')}>
+          onPress={() => navigation.navigate('TenantPublicProfile')}>
           <Icon
             style={styles.icon}
             name="eye-outline"
@@ -247,24 +252,7 @@ const SettingsScreen = () => {
             style={styles.arrowIcon}
           />
         </TouchableOpacity>
-      
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => console.log('Notifications')}>
-          <Icon
-            style={styles.icon}
-            name="bell"
-            size={26}
-            color={Colors.primary}
-          />
-          <Text style={styles.optionText}>Notifications</Text>
-          <Icon
-            name="chevron-right"
-            size={26}
-            color={Colors.blue}
-            style={styles.arrowIcon}
-          />
-        </TouchableOpacity>
+
         <TouchableOpacity style={styles.option} onPress={handleLogout}>
           <Icon
             style={styles.icon}

@@ -20,8 +20,11 @@ const Properties = ({ route, navigation }) => {
     const fetchProperties = async () => {
       try {
         const searchParams = route.params.searchParams;
-        setProperties(searchParams);
-        console.log('Fetched properties:', searchParams);
+
+        // Filter properties with the status 'listed'
+        const listedProperties = searchParams.filter(property => property.status === 'listed');
+        setProperties(listedProperties);
+        console.log('Fetched properties:', listedProperties);
       } catch (error) {
         console.error('Error fetching properties:', error);
       } finally {

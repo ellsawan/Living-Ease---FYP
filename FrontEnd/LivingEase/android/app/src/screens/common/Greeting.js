@@ -1,13 +1,13 @@
 // Greeting.js
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../../constants/Colors';
 import apiClient from '../../../../../apiClient'; // Import the apiClient
 import fonts from '../../constants/Font';
 
 // Helper function to capitalize the first letter of a string
-const capitalizeFirstLetter = (string) => {
+const capitalizeFirstLetter = string => {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
 
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   container: {
     marginTop: -60, // Add a margin top to position the Greeting component
     marginLeft: 20,
-    marginBottom: 10, // Add a margin left to position the Greeting component
+    marginBottom: 20, // Add a margin left to position the Greeting component
     // Add any additional styling if needed
   },
   greetingText: {

@@ -9,7 +9,6 @@ const propertySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
     propertyName: {
       type: String,
       required: true,
@@ -71,6 +70,11 @@ const propertySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    rentedBy: { 
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+      default: null, 
     },
   },
 

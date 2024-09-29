@@ -1,23 +1,32 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
 import SignatureCapture from 'react-native-signature-capture';
 import Colors from '../../../constants/Colors';
 import fonts from '../../../constants/Font';
+
 const SignatureScreenComponent = ({ onOK }) => {
   const signatureRef = useRef(null);
+  const [hasSigned, setHasSigned] = useState(false); // Track if the user has signed
 
   const saveSignature = () => {
-    signatureRef.current.saveImage();
+    if (hasSigned) {
+      signatureRef.current.saveImage();
+    } else {
+      Alert.alert('Error', 'Please provide a signature before saving.');
+    }
   };
 
   const onSaveEvent = (result) => {
-    console.log('Signature saved:', result.encoded);
-    onOK(result.encoded);
-    Alert.alert('Success', 'Signature saved successfully!');
+    if (result.encoded) {
+      console.log('Signature saved:', result.encoded);
+      onOK(result.encoded);
+      Alert.alert('Success', 'Signature saved successfully!');
+    }
   };
 
   const onDragEvent = () => {
     console.log('User is dragging');
+    setHasSigned(true); // Set to true when user drags on the screen
   };
 
   return (
@@ -31,10 +40,8 @@ const SignatureScreenComponent = ({ onOK }) => {
           showNativeButtons={false}
           showTitleLabel={false}
           viewMode={'portrait'}
-               
-         minStrokeWidth={4}
-                   
-        maxStrokeWidth={4}
+          minStrokeWidth={4}
+          maxStrokeWidth={4}
         />
       </View>
       
@@ -42,7 +49,10 @@ const SignatureScreenComponent = ({ onOK }) => {
         <Text style={styles.buttonText}>Save Signature</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.button} onPress={() => signatureRef.current.resetImage()}>
+      <TouchableOpacity style={styles.button} onPress={() => {
+        signatureRef.current.resetImage();
+        setHasSigned(false); // Reset the signed status on reset
+      }}>
         <Text style={styles.buttonText}>Reset Signature</Text>
       </TouchableOpacity>
     </View>
@@ -67,14 +77,13 @@ const styles = StyleSheet.create({
     shadowOffset: {
       width: 0,
       height: 2,
-      
     },
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 5,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom:30,
+    marginBottom: 30,
   },
   signature: {
     width: '100%',
@@ -90,11 +99,11 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     width: '80%', 
     alignItems: 'center',
-    elevation:5,
+    elevation: 5,
   },
   buttonText: {
     color: Colors.white, 
-    fontFamily:fonts.bold,
+    fontFamily: fonts.bold,
     fontSize: 16,
   },
 });

@@ -104,7 +104,7 @@ const SignInScreen = ({ navigation }) => {
             onPress={togglePasswordVisibility}>
             <Icon name={secureTextEntry ? 'eye-off' : 'eye'} size={20} color={Colors.placeholdertext} />
           </TouchableOpacity>
-        </View>
+        </View> 
         <TouchableOpacity
           style={{ alignSelf: 'flex-end', marginTop: 10 }}
           onPress={() => navigation.navigate('ForgotPassword')}>

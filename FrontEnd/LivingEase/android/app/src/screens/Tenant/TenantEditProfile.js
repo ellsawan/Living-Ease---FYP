@@ -26,7 +26,7 @@ const EditProfileScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const phoneRegex = /^[0-9]{10}$/;
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -106,16 +106,39 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const handleSave = async () => {
+    // Validate that all required fields are filled
+    if (!firstName.trim()) {
+      Alert.alert('Missing Field', 'Please enter your first name.');
+      return;
+    }
+    if (!lastName.trim()) {
+      Alert.alert('Missing Field', 'Please enter your last name.');
+      return;
+    }
+    const nameRegex = /^[a-zA-Z\s]*$/;
+    if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+      Alert.alert('Validation Error', 'Names must not contain numeric characters.');
+      return;
+    }
+    if (!email.trim() || !email.includes('@')) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address. It must contain "@" symbol.');
+      return;
+    }
+    if (!phoneRegex.test(contactNumber)) {
+      Alert.alert('Invalid Phone Number', 'Contact number must be exactly 10 digits.');
+      return;
+    }
+  
     try {
       setLoading(true);
       const trimmedContactNumber = `+92 ${contactNumber.trim()}`; // Add +92 prefix
-
+  
       const formData = new FormData();
       formData.append('firstName', firstName);
       formData.append('lastName', lastName);
       formData.append('contactNumber', trimmedContactNumber);
       formData.append('email', email);
-
+  
       if (
         profileImage &&
         profileImage !==
@@ -127,13 +150,13 @@ const EditProfileScreen = ({ navigation }) => {
           name: 'profile-image.jpg',
         });
       }
-
+  
       const response = await apiClient.put('user/updateUserData', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       if (response.status === 200) {
         Alert.alert('Success', 'Profile updated successfully!');
       } else {
@@ -156,6 +179,8 @@ const EditProfileScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+  
+  
 
   const handleContactNumberChange = (text) => {
     const cleanedText = text.replace(/[^0-9]/g, '');

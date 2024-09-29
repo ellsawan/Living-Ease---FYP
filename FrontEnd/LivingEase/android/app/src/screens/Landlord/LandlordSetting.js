@@ -230,41 +230,26 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => console.log('Public Profile')}>
-          <Icon
-            style={styles.icon}
-            name="eye-outline"
-            size={26}
-            color={Colors.primary}
-          />
-          <Text style={styles.optionText}>Public Profile</Text>
-          <Icon
-            name="chevron-right"
-            size={26}
-            color={Colors.blue}
-            style={styles.arrowIcon}
-          />
-        </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.option}
+  onPress={() => navigation.navigate('LandlordOwnProfile')}>
+  <Icon
+    style={styles.icon}
+    name="eye-outline"
+    size={26}
+    color={Colors.primary}
+  />
+  <Text style={styles.optionText}>Public Profile</Text>
+  <Icon
+    name="chevron-right"
+    size={26}
+    color={Colors.blue}
+    style={styles.arrowIcon}
+  />
+</TouchableOpacity>
+
       
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => console.log('Notifications')}>
-          <Icon
-            style={styles.icon}
-            name="bell"
-            size={26}
-            color={Colors.primary}
-          />
-          <Text style={styles.optionText}>Notifications</Text>
-          <Icon
-            name="chevron-right"
-            size={26}
-            color={Colors.blue}
-            style={styles.arrowIcon}
-          />
-        </TouchableOpacity>
+      
         <TouchableOpacity style={styles.option} onPress={handleLogout}>
           <Icon
             style={styles.icon}

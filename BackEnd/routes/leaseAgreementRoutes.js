@@ -21,5 +21,9 @@ router.get('/tenant/:tenantId', leaseAgreementController.getLeaseAgreementsByTen
 
 // Get lease agreements by landlord ID
 router.get('/landlord/:landlordId', leaseAgreementController.getLeaseAgreementsByLandlordId);
+// Route to delete a lease agreement by ID
+router.delete('/:id', leaseAgreementController.deleteLeaseAgreement);
+// Route to check if a tenant has an active lease
+router.get('/active/:tenantId', leaseAgreementController.checkActiveLease);
 
 module.exports = router;

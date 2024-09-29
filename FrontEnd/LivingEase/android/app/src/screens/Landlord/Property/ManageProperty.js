@@ -13,6 +13,7 @@ const ManageProperty = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [activeTab, setActiveTab] = useState('Listed'); // Default active tab
 
   const fetchProperties = async () => {
     try {
@@ -45,15 +46,35 @@ const ManageProperty = () => {
     navigation.navigate('PropertyDetails', { propertyId: property._id });
   };
 
+  // Filter properties based on the selected tab (use lowercase for comparison)
+  const filteredProperties = properties.filter(property => {
+    return activeTab === 'Listed' ? property.status === 'listed' : property.status === 'rented';
+  });
+
   return (
     <View style={styles.container}>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'Listed' && styles.activeTab]}
+          onPress={() => setActiveTab('Listed')}
+        >
+          <Text style={[styles.tabText, activeTab === 'Listed' && styles.activeTabText]}>Listed</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'Rented' && styles.activeTab]}
+          onPress={() => setActiveTab('Rented')}
+        >
+          <Text style={[styles.tabText, activeTab === 'Rented' && styles.activeTabText]}>Rented</Text>
+        </TouchableOpacity>
+      </View>
+
       {loading ? (
         <ActivityIndicator size="large" color={Colors.primary} />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <FlatList
-          data={properties}
+          data={filteredProperties}
           renderItem={({ item }) => (
             <PropertyCard
               property={item}
@@ -80,12 +101,35 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: Colors.white,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderColor: Colors.lightgrey,
+  },
+  activeTab: {
+    borderColor: Colors.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: Colors.darkText,
+  },
+  activeTabText: {
+    color: Colors.primary,
+  },
   floatingButton: {
     position: 'absolute',
     bottom: 30,
     right: 20,
-    backgroundColor: Colors.primary, 
-    width: 60, 
+    backgroundColor: Colors.primary,
+    width: 60,
     height: 60,
     borderRadius: 30,
     alignItems: 'center',

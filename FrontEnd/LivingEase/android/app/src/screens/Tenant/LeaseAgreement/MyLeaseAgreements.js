@@ -1,50 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../../../constants/Colors';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import apiClient from '../../../../../../apiClient';
 import LeaseAgreementCard from './LeaseAgreementCard';
 import fonts from '../../../constants/Font';
+
 const MyLeaseAgreements = () => {
   const [activeTab, setActiveTab] = useState('Active');
   const [leaseAgreements, setLeaseAgreements] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchLeaseAgreements = async () => {
-      try {
-        const tenantId = await AsyncStorage.getItem('userId');
-        if (tenantId) {
-          const response = await apiClient.get(`/leaseAgreement/tenant/${tenantId}`);
-          setLeaseAgreements(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching lease agreements:", error);
-      } finally {
-        setLoading(false);
+  // Function to fetch lease agreements
+  const fetchLeaseAgreements = async () => {
+    try {
+      setLoading(true); // Show loading indicator
+      const tenantId = await AsyncStorage.getItem('userId');
+      if (tenantId) {
+        const response = await apiClient.get(
+          `/leaseAgreement/tenant/${tenantId}`,
+        );
+        setLeaseAgreements(response.data); // Update state with fetched data
       }
-    };
-
-    fetchLeaseAgreements();
-  }, []);
-
-  const filteredLeases = leaseAgreements.filter(lease => lease.status === activeTab);
-
-  const handleViewDetails = (leaseId) => {
-    navigation.navigate('LeaseDetails', { leaseId });
+    } catch (error) {
+      console.error('Error fetching lease agreements:', error);
+    } finally {
+      setLoading(false); // Hide loading indicator
+    }
   };
+
+  // Fetch lease agreements when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchLeaseAgreements();
+    }, []),
+  );
+
+  // Filter only active and pending lease agreements
+  const filteredLeases = leaseAgreements.filter(lease => {
+    if (activeTab === 'Active') {
+      return lease.status === 'Active';
+    } else if (activeTab === 'Pending') {
+      return lease.status === 'Pending';
+    }
+    return false;
+  });
 
   return (
     <View style={styles.container}>
       <View style={styles.tabsContainer}>
+        {/* Only Active and Pending tabs */}
         {['Active', 'Pending'].map(tab => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => setActiveTab(tab)}
-          >
+            onPress={() => setActiveTab(tab)}>
             <Text style={styles.tabText}>{tab}</Text>
           </TouchableOpacity>
         ))}
@@ -55,17 +74,26 @@ const MyLeaseAgreements = () => {
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : (
-        <FlatList
-          data={filteredLeases}
-          keyExtractor={(item) => item._id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.leaseCard}>
-              <LeaseAgreementCard leaseData={item} />
-           
+        <>
+          {filteredLeases.length === 0 ? (
+            <View style={styles.noAgreementsContainer}>
+              <Text style={styles.noAgreementsText}>
+                There are no agreements
+              </Text>
             </View>
+          ) : (
+            <FlatList
+              data={filteredLeases}
+              keyExtractor={item => item._id.toString()}
+              renderItem={({item}) => (
+                <View style={styles.leaseCard}>
+                  <LeaseAgreementCard leaseData={item} />
+                </View>
+              )}
+              contentContainerStyle={styles.list}
+            />
           )}
-          contentContainerStyle={styles.list}
-        />
+        </>
       )}
     </View>
   );
@@ -101,20 +129,18 @@ const styles = StyleSheet.create({
     color: Colors.darkText,
     fontFamily: fonts.bold,
   },
-  viewButton: {
-    padding: 15,
-    backgroundColor: Colors.primary,
-    borderRadius: 30,
-    marginTop: 5,
-    justifyContent: 'center',  // Center the content vertically
-    alignItems: 'center',      // Center the content horizontally
-    flexDirection: 'row',      // Ensure that the content is row-oriented
+  noAgreementsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  viewButtonText: {
-    fontSize: 16,
-    color: Colors.white,
+  noAgreementsText: {
+    fontSize: 18,
+    color: Colors.blue,
     fontFamily: fonts.bold,
-    textAlign: 'center',       // Center the text
+  },
+  leaseCard: {
+    marginBottom: 10,
   },
   list: {
     paddingBottom: 20,
