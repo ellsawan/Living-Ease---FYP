@@ -59,7 +59,7 @@ const DashboardScreen = () => {
           title="Rent Payment"
           icon="currency-usd"
           description="Review your payment history."
-          onPress={() => console.log('Navigate to Rent Payment screen')}
+          onPress={() => navigation.navigate('ManagePayments')}
         />
         <DashboardCard
           title="Maintenance Requests"

@@ -62,7 +62,7 @@ const leaseAgreementSchema = new mongoose.Schema({
     default: 'Pending',
   },
   terms: {
-    type: [String], // Array of strings for the lease terms and conditions
+    type: [String], 
     required: true,
   },
   createdAt: {

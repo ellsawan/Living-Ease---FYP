@@ -50,7 +50,9 @@ exports.getName = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ firstName: user.firstName, lastName: user.lastName });
+    res
+      .status(200)
+      .json({ firstName: user.firstName, lastName: user.lastName });
   } catch (error) {
     console.error("Error fetching user name: ", error.message);
     res.status(500).json({ message: "Server error" });
@@ -70,7 +72,9 @@ exports.getUserProfileImage = async (req, res) => {
     }
 
     res.status(200).json({
-      profileImageUrl: user.profileImage?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+      profileImageUrl:
+        user.profileImage?.url ||
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
     });
   } catch (error) {
     console.error("Error fetching user profile image:", error.message);
@@ -84,25 +88,39 @@ exports.getUserProfileImage = async (req, res) => {
 // Controller to get data for the currently authenticated user
 exports.getUserData = async (req, res) => {
   try {
-    const user = req.user;
+    const user = req.user; // Assuming req.user contains the authenticated user's details
 
+    // Check if the user object is valid
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({
+    // Construct the response object with user details
+    const userDetails = {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       role: user.role,
       contactNumber: user.contactNumber || "",
-      profileImage: user.profileImage?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-    });
+      profileImage:
+        user.profileImage?.url ||
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+    };
+
+    // Include stripeAccountId if it exists
+    if (user.stripeAccountId) {
+      userDetails.stripeAccountId = user.stripeAccountId;
+    }
+
+    // Send response with user details
+    res.status(200).json(userDetails);
+    
   } catch (error) {
     console.error("Error fetching user data:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.updateUserProfile = async (req, res) => {
   if (!req.user) {
@@ -149,14 +167,57 @@ exports.updateUserProfile = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         contactNumber: user.contactNumber,
-        profileImage: user.profileImage?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+        profileImage:
+          user.profileImage?.url ||
+          "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
       },
     });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ message: "Duplicate key error", error: error.message });
+      return res
+        .status(400)
+        .json({ message: "Duplicate key error", error: error.message });
     }
     console.error("Error updating user profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// New Controller to fetch user details by user ID
+exports.getUserDetailsById = async (req, res) => {
+  const userId = req.params.id; // Expecting user ID to be passed as a URL parameter
+
+  try {
+    const user = await User.findById(userId);
+
+    // Log the fetched user for debugging
+    console.log("Fetched User:", user);
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Create response object with user details
+    const userDetails = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      contactNumber: user.contactNumber || "",
+      profileImage:
+        user.profileImage?.url ||
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+    };
+
+    // Include stripeAccountId only if it exists
+    if (user.stripeAccountId) {
+      userDetails.stripeAccountId = user.stripeAccountId; // Add this only if it exists
+    }
+
+    res.status(200).json(userDetails);
+  } catch (error) {
+    console.error("Error fetching user details:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };

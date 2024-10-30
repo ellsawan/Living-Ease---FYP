@@ -106,25 +106,101 @@ const LeaseAgreementScreen = ({ route, navigation }) => {
   // Function to handle downloading the lease agreement
   const handleDownload = async () => {
     if (!agreementData) return;
-
+    const formatCnic = (cnic) => {
+      return cnic.replace(/(\d{5})(\d{7})/, '$1-$2');
+    };
+    const formattedTenantCnic = formatCnic(agreementData.tenantCnic);
+    const formattedLandlordCnic = formatCnic(agreementData.landlordCnic);
+  
     const htmlContent = `
-      <h1>Lease Agreement</h1>
-      <p>This rent agreement is signed on this day of ${new Date(agreementData.updatedAt).toLocaleDateString()}.</p>
-      <h2>BETWEEN</h2>
-      <p>${agreementData.landlordName}</p>
-      <p>Hereinafter referred to as the “landlord” of the one part.</p>
-      <h2>AND</h2>
-      <p>${agreementData.tenantName}</p>
-      <p>Hereinafter referred to as the “tenant” of the other part.</p>
-      <h3>Terms:</h3>
-      <ul>
-        ${agreementData.terms.map(term => `<li>${term}</li>`).join('')}
-      </ul>
-      <h2>Signatures</h2>
-      <p>Tenant's Signature: <img src="data:image/png;base64,${agreementData.tenantSignature}" /></p>
-      <p>Landlord's Signature: <img src="data:image/png;base64,${agreementData.landlordSignature}" /></p>
-      <p>Tenant CNIC: ${agreementData.tenantCnic}</p>
-      <p>Landlord CNIC: ${agreementData.landlordCnic}</p>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: '${fonts.regular}';
+              margin: 20px;
+              color: ${Colors.darkText};
+            }
+            h1, h2, h3 {
+              text-align: center;
+              color: ${Colors.primary};
+            }
+            h1 {
+              font-size: 24px;
+              font-weight: bold;
+            }
+            h2 {
+              font-size: 20px;
+              font-weight: semi-bold;
+            }
+            h3 {
+              font-size: 18px;
+              font-weight: semi-bold;
+            }
+            p {
+              font-size: 16px;
+              line-height: 1.5;
+              text-align: center;
+            }
+            ul {
+              list-style-type: none;
+              padding: 0;
+            }
+            li {
+              font-size: 16px;
+              text-align: left; /* Left align terms */
+              line-height: 1.5;
+            }
+            .signature-section {
+              margin-top: 30px;
+              display: flex;
+              justify-content: space-between;
+            }
+            .signature {
+              width: 50%;
+              text-align: center;
+            }
+            .signature img {
+              width: 100%;
+              max-height: 100px;
+              border: 2px solid ${Colors.primary};
+              border-radius: 8px;
+            }
+            .cnic {
+              font-size: 14px;
+              font-weight: semi-bold;
+              margin-top: 5px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Lease Agreement</h1>
+          <p>This rent agreement is signed on this day of ${new Date(agreementData.updatedAt).toLocaleDateString()}.</p>
+          <h2>BETWEEN</h2>
+          <p>${agreementData.landlordName}</p>
+          <p>Hereinafter referred to as the “landlord” of the one part.</p>
+          <h2>AND</h2>
+          <p>${agreementData.tenantName}</p>
+          <p>Hereinafter referred to as the “tenant” of the other part.</p>
+          <h3>Terms:</h3>
+          <ol>
+            ${agreementData.terms.map(term => `<li>${term}</li>`).join('')}
+          </ol>
+          <h2>Signatures</h2>
+          <div class="signature-section">
+            <div class="signature">
+              <p>Tenant's Signature:</p>
+              ${agreementData.tenantSignature ? `<img src="data:image/png;base64,${agreementData.tenantSignature}" />` : '<p>No signature available</p>'}
+              <p class="cnic">Tenant CNIC: ${formattedTenantCnic}</p>
+            </div>
+            <div class="signature">
+              <p>Landlord's Signature:</p>
+              ${agreementData.landlordSignature ? `<img src="data:image/png;base64,${agreementData.landlordSignature}" />` : '<p>No signature available</p>'}
+              <p class="cnic">Landlord CNIC: ${formattedLandlordCnic}</p>
+            </div>
+          </div>
+        </body>
+      </html>
     `;
     console.log('HTML Content:', htmlContent);
     try {

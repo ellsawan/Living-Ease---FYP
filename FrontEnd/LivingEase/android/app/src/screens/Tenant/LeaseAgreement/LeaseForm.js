@@ -44,6 +44,7 @@ const[propertyId, setPropertyId] = useState('');
   const [landlordModalVisible, setLandlordModalVisible] = useState(false);
   const [tenantModalVisible, setTenantModalVisible] = useState(false);
   const [tenantId, setTenantId] = useState('');
+  const [terms,setTerms]=useState(['']);
   const currentDate = new Date();
   const getAuthToken = async () => {
     try {
@@ -70,6 +71,7 @@ console.log('property id',response.data.propertyId._id)
         setLandlordName(leaseData.landlordName);
         setLandlordSignature(leaseData.landlordSignature);
         setTenantId(leaseData.tenantId._id);
+        setTerms(leaseData.terms)
       setPropertyId(leaseData.propertyId._id)
       } catch (error) {
         console.error('Error fetching lease details:', error);
@@ -181,20 +183,7 @@ console.log('property id',response.data.propertyId._id)
     });
   };
 
-  const terms = [
-    `The monthly rent for the property is fixed at Rs. ${rent} (Rupees ${rent} only), payable in advance within 10 days and 25th day of each month.`,
-    `The tenancy period is from ${formatDate(tenancyStartDate)} to ${formatDate(
-      tenancyEndDate,
-    )}.`,
-    "One month's notice from either party for vacation of the property is mandatory.",
-    'The Tenant shall not make any alterations to the property without the written prior approval of the Landlord.',
-    'The Tenant shall not sub-let the property wholly or partially.',
-    'The possession of the property will be handed over to the Landlord upon expiry of this agreement.',
-    'The Tenant shall return the property in the condition it was received, responsible for repairs or replacements of any wear and tear.',
-    'The Tenant shall be solely responsible for the payment of all utility bills (Electricity, Gas, etc.) and shall provide the paid bills to the Landlord.',
-    'The Landlord or their agents have the right to enter the property at reasonable times to inspect or make necessary repairs.',
-    'Any breach of the above terms may result in immediate vacation of the property by the Tenant without notice.',
-  ];
+  
 
   return (
     <ScrollView style={styles.container}>
@@ -230,6 +219,12 @@ console.log('property id',response.data.propertyId._id)
 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Terms and Conditions</Text>
+        {terms.map((term, index) => (
+          <View key={index} style={styles.termContainer}>
+            <Text style={styles.termNumber}>{index + 1}.</Text>
+            <Text style={styles.termText}>{term}</Text>
+          </View>
+        ))}
         <View style={styles.inputContainer}>
           <Text style={styles.inputTitle}>Monthly Rent</Text>
           <Text style={styles.input}>{rent}</Text>

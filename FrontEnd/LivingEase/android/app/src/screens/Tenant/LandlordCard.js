@@ -9,6 +9,7 @@ import {
   Linking,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import apiClient from '../../../../../apiClient';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
@@ -23,7 +24,7 @@ const capitalizeFirstLetter = string => {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
 
-const LandlordCard = ({propertyId, onMessagePress}) => {
+const LandlordCard = ({propertyId}) => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
@@ -54,6 +55,24 @@ const LandlordCard = ({propertyId, onMessagePress}) => {
       );
     } else {
       console.error('No contact number available for the property');
+    }
+  };
+
+  const handleMessagePress = async () => {
+    try {
+      const tenantId = await AsyncStorage.getItem('userId');
+       // Log the tenant ID
+     
+      if (tenantId && property?.owner) {
+        navigation.navigate('Chat', {
+          receiverId: property.owner._id,
+          senderId: tenantId,
+          
+                  });
+                  console.log('rec id:', property.owner._id);
+      }
+    } catch (error) {
+      console.error('Error retrieving tenantId:', error);
     }
   };
 
@@ -99,7 +118,7 @@ const LandlordCard = ({propertyId, onMessagePress}) => {
           </Text>
           <View style={styles.iconsContainer}>
             <TouchableOpacity
-              onPress={onMessagePress}
+              onPress={handleMessagePress}
               style={styles.iconTextWrapper}>
               <View style={styles.iconBackground}>
                 <Icon name="chat" size={28} color={Colors.primary} />

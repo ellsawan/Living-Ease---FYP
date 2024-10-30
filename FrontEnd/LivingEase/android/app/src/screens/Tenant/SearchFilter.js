@@ -180,7 +180,7 @@ const SearchFilter = ({route}) => {
   
     try {
       console.log('Filtered Search Params:', JSON.stringify(filteredSearchParams, null, 2));
-      const response = await apiClient.get('/property/search', {
+      const response = await apiClient.get('http://127.0.0.1:8080/api/recommend', {
         params: filteredSearchParams,
       });
       console.log('Search results:', response.data);

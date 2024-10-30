@@ -14,6 +14,9 @@ import TenantNavigator from './TenantNavigator';
 import ForgotPassword from '../screens/Auth/ForgotPassword';
 import ResetPassword from '../screens/Auth/ResetPassword';
 import VerifyOTP from '../screens/Auth/VerifyOTP';
+import Chat from '../screens/common/Chat';
+import Colors from '../constants/Colors';
+import fonts from '../constants/Font';
 const Stack = createStackNavigator();
 
 const AuthNavigator = () => {
@@ -84,7 +87,16 @@ const AuthNavigator = () => {
           component={ServiceProviderDashboard}
           options={{headerShown: false}}
         />
-        
+        <Stack.Screen
+        name="Chat"
+        component={Chat}
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

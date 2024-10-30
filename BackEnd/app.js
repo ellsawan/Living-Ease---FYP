@@ -11,9 +11,13 @@ const rentalApplicationRoutes=require('./routes/rentalApplicationRoutes')
 const appointmentRoutes=require('./routes/appointmentRoutes')
 const leaseAgreementRoutes = require('./routes/leaseAgreementRoutes');
 const ratingRoutes= require ('./routes/ratingRoutes')
+const recommendationsRoute = require('./routes/recommendationsRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 const timeout = require('connect-timeout');
+
 
 dotenv.config();
 
@@ -42,6 +46,10 @@ app.use('/api/rentalApplication', rentalApplicationRoutes);
 app.use('/api/appointment',appointmentRoutes)
 app.use('/api/leaseAgreement',leaseAgreementRoutes)
 app.use('/api/rating',ratingRoutes)
+app.use('/api/recommendations', recommendationsRoute); 
+app.use('/api/messages', messageRoutes);
+app.use('/api/payments', paymentRoutes);
+
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

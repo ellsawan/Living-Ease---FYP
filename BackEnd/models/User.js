@@ -1,6 +1,5 @@
-// models/User.js
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const UserSchema = new mongoose.Schema({
   firstName: {
@@ -19,11 +18,11 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    maxlength:2048,
+    maxlength: 2048,
   },
   role: {
     type: String,
-    enum: ['Tenant', 'Landlord', 'ServiceProvider'],
+    enum: ["Tenant", "Landlord", "ServiceProvider"],
     required: true,
   },
   date: {
@@ -31,16 +30,19 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
   },
   contactNumber: {
-    type: String, // You can use String or Number depending on your use case
-    required: false, // Set to `true` if you want to make it required
+    type: String,
+    required: false,
   },
   profileImage: {
     publicId: { type: String },
     url: { type: String },
   },
-  resetPasswordOTP: String, // Field to store the OTP
-  resetPasswordExpires: Date, // Field to store OTP expiration time
+  resetPasswordOTP: String,
+  resetPasswordExpires: Date,
+  stripeAccountId: { // New field for Stripe account ID
+    type: String,
+    required: false, // It's not required during initial user creation
+  },
 });
 
-
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model("User", UserSchema);

@@ -38,11 +38,12 @@ const LeaseAgreementTemplate = () => {
   const [landlordId, setLandlordId] = useState('');
   const [propertyId, setPropertyId] = useState('');
   const [rentapplicationId, setrentApplicationId] = useState('');
-
+  const [termModalVisible, setTermModalVisible] = useState(false);
   const [landlordSignature, setLandlordSignature] = useState('');
   const [landlordModalVisible, setLandlordModalVisible] = useState(false);
   const [tenantModalVisible, setTenantModalVisible] = useState(false);
-
+  const [editingTermIndex, setEditingTermIndex] = useState(null);
+  const [editingTermValue, setEditingTermValue] = useState('');
   const currentDate = new Date();
   useEffect(() => {
     const fetchApplicationDetails = async () => {
@@ -70,7 +71,21 @@ const LeaseAgreementTemplate = () => {
     // Check if the name contains any numbers
     return /^[A-Za-z\s]+$/.test(name);
   };
+  const handleEditTerm = index => {
+    setEditingTermIndex(index);
+    setEditingTermValue(terms[index]);
+    setTermModalVisible(true);
+  };
 
+  const handleSaveTerm = () => {
+    if (editingTermIndex !== null) {
+      const updatedTerms = [...terms];
+      updatedTerms[editingTermIndex] = editingTermValue;
+      setTerms(updatedTerms);
+      setTermModalVisible(false);
+      setEditingTermIndex(null);
+    }
+  };
   const handleCreateLeaseAgreement = async () => {
     if (
       !tenantName ||
@@ -173,8 +188,8 @@ const LeaseAgreementTemplate = () => {
     });
   };
 
-  const terms = [
-    `The monthly rent for the property is fixed at Rs. ${rent} (Rupees ${rent} only), payable in advance within 10 days and 25th day of each month.`,
+  const [terms, setTerms]=useState([
+    `The monthly rent for the property is fixed at Rs. ${rent} (Rupees ${rent} only), payable in advance within 10 days of each month.`,
     `The tenancy period is from ${formatDate(tenancyStartDate)} to ${formatDate(
       tenancyEndDate,
     )}.`,
@@ -186,7 +201,7 @@ const LeaseAgreementTemplate = () => {
     'The Tenant shall be solely responsible for the payment of all utility bills (Electricity, Gas, etc.) and shall provide the paid bills to the Landlord.',
     'The Landlord or their agents have the right to enter the property at reasonable times to inspect or make necessary repairs.',
     'Any breach of the above terms may result in immediate vacation of the property by the Tenant without notice.',
-  ];
+  ]);
 
   return (
     <ScrollView style={styles.container}>
@@ -238,6 +253,20 @@ const LeaseAgreementTemplate = () => {
 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Terms and Conditions</Text>
+        {terms.map((term, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => index > 1 && handleEditTerm(index)} // Only make editable if index > 1
+            disabled={index < 2} // Disable click for first two terms
+          >
+            <View style={styles.termContainer}>
+              <Text style={styles.termNumber}>{index + 1}.</Text>
+              <Text style={index < 2 ? styles.termTextNonEditable : styles.termTextEditable}>
+                {term}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
         <View style={styles.inputContainer}>
           <Text style={styles.inputTitle}>Monthly Rent</Text>
           <TextInput
@@ -295,6 +324,7 @@ const LeaseAgreementTemplate = () => {
         {terms.map((term, index) => (
           <View key={index} style={styles.termContainer}>
             <Text style={styles.termNumber}>{index + 1}.</Text>
+            
             <Text style={styles.termText}>{term}</Text>
           </View>
         ))}
@@ -348,6 +378,29 @@ const LeaseAgreementTemplate = () => {
           }}
         />
       </Modal>
+      {/* Term Editing Modal */}
+      <Modal
+        visible={termModalVisible}
+        animationType="slide"
+        onRequestClose={() => setTermModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Edit Term</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={editingTermValue}
+            onChangeText={setEditingTermValue}
+            multiline
+          />
+          <View style={styles.modalButtonContainer}>
+            <TouchableOpacity style={styles.modalButton} onPress={handleSaveTerm}>
+              <Text style={styles.modalButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setTermModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <TouchableOpacity
         style={{
@@ -358,7 +411,9 @@ const LeaseAgreementTemplate = () => {
         onPress={handleCreateLeaseAgreement}>
         <Text style={styles.buttonText}>Create Lease Agreement</Text>
       </TouchableOpacity>
+      
     </ScrollView>
+    
   );
 };
 
@@ -423,6 +478,18 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
+  termTextNonEditable: {
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: Colors.primary,
+    marginRight:8,
+  },
+  termTextEditable: {
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: Colors.primary,
+    marginRight:8,
+  },
   dateInput: {
     fontSize: 16,
     color: Colors.blue,
@@ -481,6 +548,47 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 16,
   },
+modalContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20,
+  backgroundColor: Colors.white,
+},
+modalTitle: {
+  fontSize: 20,
+  fontFamily: fonts.bold,
+  marginBottom: 20,
+},
+modalInput: {
+  borderWidth: 1,
+  borderColor: Colors.border,
+  borderRadius: 5,
+  padding: 10,
+  width: '100%',
+  height: 100,
+  fontSize: 16,
+  fontFamily: fonts.regular,
+},
+modalButtonContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  width: '100%',
+  marginTop: 20,
+},
+modalButton: {
+  backgroundColor: Colors.primary,
+  padding: 10,
+  borderRadius: 25,
+  flex: 1,
+  marginHorizontal: 5,
+},
+modalButtonText: {
+  color: Colors.white,
+  fontSize: 16,
+  fontFamily: fonts.semiBold,
+  textAlign: 'center',
+},
 });
 
 export default LeaseAgreementTemplate;

@@ -6,7 +6,8 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
-  ScrollView,  FlatList,
+  ScrollView,
+  FlatList,  Linking,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import apiClient from '../../../../../apiClient';
@@ -14,26 +15,24 @@ import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RatingCard from '../common/RatingCard';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 const placeholderImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
 const TenantProfile = ({ navigation }) => {
   const route = useRoute();
   const { tenantId } = route.params;
-  const [reviews, setReviews] = useState([]);
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Reviews');
-  const [ratings, setRatings] = useState([]); // State for ratings
+  const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
     const fetchTenantDetails = async () => {
       try {
         const response = await apiClient.get(`/tenant/user/${tenantId}`);
         setTenantData(response.data);
-          // Fetch reviews for the landlord
-          const ratingsResponse = await apiClient.get(`/rating/ratings/${tenantId}`); // Adjust the endpoint as needed
-          console.log('Fetched ratings:', ratingsResponse.data);
-          setRatings(ratingsResponse.data);
+        const ratingsResponse = await apiClient.get(`/rating/ratings/${tenantId}`);
+        setRatings(ratingsResponse.data);
       } catch (error) {
         console.error('Error fetching tenant details:', error);
       } finally {
@@ -60,7 +59,27 @@ const TenantProfile = ({ navigation }) => {
     );
   }
 
-  const { firstName, lastName, profileImage } = tenantData.user;
+  const { firstName, lastName, profileImage,contactNumber } = tenantData.user;
+  const handleMessagePress = async () => {
+    try {
+      const landlordId = await AsyncStorage.getItem('userId');
+
+      navigation.navigate('Chat', {
+        receiverId: tenantId,
+        senderId: landlordId,
+      });
+      console.log('Navigating to chat screen', { receiverId: tenantId, senderId: landlordId,  });
+    } catch (error) {
+      console.error('Error retrieving tenantId:', error);
+    }
+  };
+  const handleCallPress = () => {
+      const phoneNumber = `tel:${contactNumber}`;
+      Linking.openURL(phoneNumber).catch(err =>
+        console.error('Error opening phone dialer:', err),
+      );
+    } 
+  
 
   return (
     <View style={styles.container}>
@@ -73,20 +92,19 @@ const TenantProfile = ({ navigation }) => {
       </Text>
 
       <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={() => {/* Handle message action */}} style={styles.iconTextWrapper}>
+        <TouchableOpacity onPress={handleMessagePress} style={styles.iconTextWrapper}>
           <View style={styles.iconBackground}>
             <Icon name="chat" size={28} color={Colors.primary} />
           </View>
           <Text style={styles.iconLabel}>Message</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => {/* Handle call action */}} style={styles.iconTextWrapper}>
+        <TouchableOpacity onPress={handleCallPress} style={styles.iconTextWrapper}>
           <View style={styles.iconBackground}>
             <Icon name="call" size={28} color={Colors.primary} />
           </View>
           <Text style={styles.iconLabel}>Call</Text>
         </TouchableOpacity>
       </View>
-
 
       <View style={styles.tabsContainer}>
         <TouchableOpacity
@@ -97,19 +115,18 @@ const TenantProfile = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-
       <ScrollView style={styles.tabContent}>
-      <FlatList
+        <FlatList
           scrollEnabled={false}
           data={ratings.filter((item) => item.role === 'Tenant')}
-            renderItem={({ item }) => (
-              <RatingCard
-                rating={item.rating}
-                review={item.review}
-              />
-            )}
-            keyExtractor={(item) => item._id}
-          />
+          renderItem={({ item }) => (
+            <RatingCard
+              rating={item.rating}
+              review={item.review}
+            />
+          )}
+          keyExtractor={(item) => item._id}
+        />
       </ScrollView>
     </View>
   );

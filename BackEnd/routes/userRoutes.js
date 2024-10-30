@@ -5,7 +5,7 @@ const {
   getName,
   uploadProfileImage,
   uploadImageController,
-  getUserProfileImage,getUserData,updateUserProfile,
+  getUserProfileImage,getUserData,updateUserProfile,getUserDetailsById
 } = require('../controllers/userController');
 // Route to get data for the currently authenticated user
 router.get('/userData', protect, getUserData);
@@ -13,6 +13,8 @@ router.get('/userData', protect, getUserData);
 router.put('/updateUserData', protect, uploadProfileImage, updateUserProfile);
 // Route to upload a profile image
 router.post('/upload-profile-image', protect, uploadProfileImage, uploadImageController);
+// Route to get user details by user ID
+router.get('/users/:id', getUserDetailsById);
 
 // Route to get the user's name
 router.get('/name', protect, getName);

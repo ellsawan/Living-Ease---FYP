@@ -24,6 +24,8 @@ import ApprovedApplications from '../screens/Landlord/LeaseAgreements/ApprovedAp
 import LeaseAgreement from '../screens/Landlord/LeaseAgreements/LeaseAgreement';
 import LeaseForm from '../screens/Landlord/LeaseAgreements/LeaseForm';
 import LandlordOwnProfile from '../screens/Landlord/LandlordOwnProfile';
+import ManagePayments from '../screens/Landlord/ManagePayments/ManagePayments';
+import CreateAccount from '../screens/Landlord/ManagePayments/CreateAccount';
 const Stack = createStackNavigator();
 
 const LandlordNavigator = () => {
@@ -373,6 +375,45 @@ const LandlordNavigator = () => {
           headerLeft: () => (
             <CustomHeaderBackButton onPress={() => navigation.goBack()} />
           ),
+          
+        })}
+      />
+      <Stack.Screen
+        name="ManagePayments"
+        component={ManagePayments}
+        options={({navigation}) => ({
+          headerTitle: 'Rent Payments',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10,
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+          
+        })}
+      />
+      <Stack.Screen
+        name="CreateAccount"
+        component={CreateAccount}
+        options={({navigation}) => ({
+          headerTitle: 'Create Stripe Account',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10,
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+          
         })}
       />
     </Stack.Navigator>
