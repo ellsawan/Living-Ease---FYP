@@ -33,39 +33,45 @@ exports.getLeaseAgreementById = async (req, res) => {
     res.status(400).json({ message: 'Error fetching lease agreement', error });
   }
 };
+// Update a lease agreement (handles termination and tenancy end date logic)
 exports.updateLeaseAgreement = async (req, res) => {
-  console.log("Incoming request payload:", req.body);
-  const { tenantId, propertyId, status } = req.body; // Assuming tenantId, propertyId, and status are passed in the request body
+  const { status, terminationReason, tenancyEndDate } = req.body;
 
   try {
-    // Find the lease agreement being updated
     const leaseToUpdate = await LeaseAgreement.findById(req.params.id);
     if (!leaseToUpdate) {
       return res.status(404).json({ message: 'Lease agreement not found' });
     }
 
-    // Update the lease agreement
-    const updatedLeaseAgreement = await LeaseAgreement.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Handle lease termination logic
+    if (status === 'Terminated') {
+      // If status is 'Terminated', set the terminationDate to the current date
+      leaseToUpdate.status = 'Terminated';
+      leaseToUpdate.terminationDate = new Date(); // Set the current date as the termination date
 
-    // If no lease agreement is found to update
-    if (!updatedLeaseAgreement) {
-      return res.status(404).json({ message: 'Lease agreement not found' });
+      if (terminationReason) {
+        leaseToUpdate.terminationReason = terminationReason; // Set termination reason if provided
+      }
     }
 
-    res.status(200).json(updatedLeaseAgreement);
+    // Automatically terminate the lease if the tenancyEndDate has passed and status is still 'Active'
+    if (new Date(tenancyEndDate) <= new Date() && leaseToUpdate.status !== 'Terminated') {
+      leaseToUpdate.status = 'Terminated';
+      leaseToUpdate.terminationDate = leaseToUpdate.terminationDate || new Date(); // Set terminationDate if it's not already set
+    }
+
+    // Update other fields if provided in the request body
+    Object.assign(leaseToUpdate, req.body);
+
+    // Save the updated lease agreement
+    await leaseToUpdate.save();
+
+    res.status(200).json(leaseToUpdate);
   } catch (error) {
-    // Enhanced error handling
-    console.error("Error updating lease agreement:", error.message); // Log specific error message for debugging
-    
-    // Check if the error is due to a casting issue (like ObjectId casting)
-    if (error.name === 'CastError') {
-      return res.status(400).json({ message: 'Invalid input data', error: error.message });
-    }
-
-    // Handle other possible errors
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Error updating lease agreement', error });
   }
 };
+
 
 
 exports.checkActiveLease = async (req, res) => {
@@ -73,10 +79,11 @@ exports.checkActiveLease = async (req, res) => {
 
   try {
     // Check for an active lease for the given tenantId
-    const activeLease = await LeaseAgreement.findOne({ tenantId, status: 'Active' });
+    const activeLease = await LeaseAgreement.findOne({ tenantId, status: 'Active' })
+      .populate('landlordId'); // Populate the landlordId field with the full landlord details
 
     if (activeLease) {
-      return res.status(200).json({ active: true });
+      return res.status(200).json({ active: true, lease: activeLease });
     } else {
       return res.status(200).json({ active: false });
     }
@@ -85,6 +92,8 @@ exports.checkActiveLease = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+
 
 // Delete a lease agreement
 exports.deleteLeaseAgreement = async (req, res) => {

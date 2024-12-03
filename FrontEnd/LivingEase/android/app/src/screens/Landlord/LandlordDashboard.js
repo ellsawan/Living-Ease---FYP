@@ -64,7 +64,7 @@ const DashboardScreen = () => {
           title="Maintenance Requests"
           icon="wrench-outline"
           description="Track requests"
-          onPress={() => console.log('Navigate to Maintenance Requests screen')}
+          onPress={() => navigation.navigate('ManageRequests')}
         />
       </View>
     </View>

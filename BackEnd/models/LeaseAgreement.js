@@ -73,6 +73,10 @@ const leaseAgreementSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  terminationDate: {  // Add terminationDate field
+    type: Date,
+    default: null, // Null means the lease is not terminated yet
+  },
 });
 
 // Pre-save middleware to update the `updatedAt` field before each save

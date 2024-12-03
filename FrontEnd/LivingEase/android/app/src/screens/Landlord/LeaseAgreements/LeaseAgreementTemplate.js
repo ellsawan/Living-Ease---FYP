@@ -168,7 +168,11 @@ const LeaseAgreementTemplate = () => {
       }
     }
   };
-
+  const handleDeleteTermInModal = () => {
+    setTerms((prevTerms) => prevTerms.filter((_, i) => i !== editingTermIndex));
+    setTermModalVisible(false); // Close the modal after deletion
+  };
+  
   const handleEndDateChange = (event, selectedDate) => {
     setShowEndDatePicker(false);
     if (selectedDate) {
@@ -187,6 +191,10 @@ const LeaseAgreementTemplate = () => {
       year: 'numeric',
     });
   };
+  const handleDeleteTerm = (index) => {
+    setTerms((prevTerms) => prevTerms.filter((_, i) => i !== index));
+  };
+  
 
   const [terms, setTerms]=useState([
     `The monthly rent for the property is fixed at Rs. ${rent} (Rupees ${rent} only), payable in advance within 10 days of each month.`,
@@ -254,19 +262,25 @@ const LeaseAgreementTemplate = () => {
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Terms and Conditions</Text>
         {terms.map((term, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => index > 1 && handleEditTerm(index)} // Only make editable if index > 1
-            disabled={index < 2} // Disable click for first two terms
-          >
-            <View style={styles.termContainer}>
-              <Text style={styles.termNumber}>{index + 1}.</Text>
-              <Text style={index < 2 ? styles.termTextNonEditable : styles.termTextEditable}>
-                {term}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+  <TouchableOpacity
+    key={index}
+    onPress={() => index > 1 && handleEditTerm(index)} // Only make editable if index > 1
+    disabled={index < 2} // Disable click for first two terms
+  >
+    <View style={styles.termContainer}>
+      <Text style={styles.termNumber}>{index + 1}.</Text>
+      <Text
+        style={
+          index < 2 ? styles.termTextNonEditable : styles.termTextEditable
+        }
+      >
+        {term}
+      </Text>
+     
+    </View>
+  </TouchableOpacity>
+))}
+
         <View style={styles.inputContainer}>
           <Text style={styles.inputTitle}>Monthly Rent</Text>
           <TextInput
@@ -378,29 +392,45 @@ const LeaseAgreementTemplate = () => {
           }}
         />
       </Modal>
-      {/* Term Editing Modal */}
-      <Modal
-        visible={termModalVisible}
-        animationType="slide"
-        onRequestClose={() => setTermModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Edit Term</Text>
-          <TextInput
-            style={styles.modalInput}
-            value={editingTermValue}
-            onChangeText={setEditingTermValue}
-            multiline
-          />
-          <View style={styles.modalButtonContainer}>
-            <TouchableOpacity style={styles.modalButton} onPress={handleSaveTerm}>
-              <Text style={styles.modalButtonText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalButton} onPress={() => setTermModalVisible(false)}>
-              <Text style={styles.modalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+    {/* Term Editing Modal */}
+<Modal
+  visible={termModalVisible}
+  animationType="slide"
+  onRequestClose={() => setTermModalVisible(false)}
+>
+  <View style={styles.modalContainer}>
+    <Text style={styles.modalTitle}>Edit Term</Text>
+    <TextInput
+      style={styles.modalInput}
+      value={editingTermValue}
+      onChangeText={setEditingTermValue}
+      multiline
+    />
+    <View style={styles.modalButtonContainer}>
+      {/* Save Button */}
+      <TouchableOpacity style={styles.modalButton} onPress={handleSaveTerm}>
+        <Text style={styles.modalButtonText}>Save</Text>
+      </TouchableOpacity>
+      
+      {/* Cancel Button */}
+      <TouchableOpacity
+        style={styles.modalButton}
+        onPress={() => setTermModalVisible(false)}
+      >
+        <Text style={styles.modalButtonText}>Cancel</Text>
+      </TouchableOpacity>
+
+      {/* Delete Button */}
+      <TouchableOpacity
+        style={[styles.modalButton, styles.deleteButton]}
+        onPress={handleDeleteTermInModal}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
 
       <TouchableOpacity
         style={{
@@ -548,6 +578,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 16,
   },
+  deleteButton: {
+    backgroundColor: "red",
+    padding: 10,
+    borderRadius: 25,
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  deleteButtonText: {
+    color: "white",
+    fontFamily: fonts.bold,
+    textAlign:'center',
+  },
+  
 modalContainer: {
   flex: 1,
   justifyContent: 'center',

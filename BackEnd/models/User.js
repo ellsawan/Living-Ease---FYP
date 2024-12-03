@@ -39,10 +39,8 @@ const UserSchema = new mongoose.Schema({
   },
   resetPasswordOTP: String,
   resetPasswordExpires: Date,
-  stripeAccountId: { // New field for Stripe account ID
-    type: String,
-    required: false, // It's not required during initial user creation
-  },
+  stripeAccountId: { type: String, required: false }, 
+  stripeAccountStatus:{ type: String, required: false }, 
 });
 
 module.exports = mongoose.model("User", UserSchema);

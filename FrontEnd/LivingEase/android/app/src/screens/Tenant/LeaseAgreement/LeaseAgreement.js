@@ -61,7 +61,8 @@ const LeaseAgreementScreen = ({ route, navigation }) => {
           onPress: async () => {
             try {
               const response = await apiClient.put(`/leaseAgreement/${leaseId}`, {
-                status: 'Terminated', // Assuming the status field in the request body
+                status: 'Terminated',
+                terminationDate: new Date(), // Assuming the status field in the request body
               });
               Alert.alert('Success', 'Lease has been terminated.', [
                 {

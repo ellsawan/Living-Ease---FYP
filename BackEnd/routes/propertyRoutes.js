@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addProperty, addPropertyController,updateProperty,setRentedByController,getRentedPropertyByTenantIdController,updatePropertyController,changePropertyStatusToRentedController,searchProperties,getPropertiesByOwnerController,getPropertyByIdController ,deletePropertyController,getPropertiesByUserController} = require('../controllers/propertyController');
+const { addProperty, addPropertyController,updateProperty,setRentedByController,getRentedPropertyByTenantIdController,updatePropertyController,changePropertyStatusToRentedController,searchProperties,getPropertiesByOwnerController,getPropertyByIdController ,deletePropertyController,getPropertiesByUserController,searchPropertiesByIds} = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 //Route to search properties
 router.get('/search', searchProperties);
@@ -22,4 +22,6 @@ router.put("/:propertyId/status/rented", protect,changePropertyStatusToRentedCon
 router.post("/setRentedBy", protect,setRentedByController);
 // Route to get rented property by tenant ID
 router.get("/:tenantId/rented-property", getRentedPropertyByTenantIdController);
+// Define route to search properties by their IDs
+router.post('/search/properties', searchPropertiesByIds); // Use POST for passing an array in the body
 module.exports = router;

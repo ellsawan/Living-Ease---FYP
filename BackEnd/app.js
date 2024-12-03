@@ -14,6 +14,7 @@ const ratingRoutes= require ('./routes/ratingRoutes')
 const recommendationsRoute = require('./routes/recommendationsRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const maintenanceRoutes=require('./routes/maintenanceRoutes');
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 const timeout = require('connect-timeout');
@@ -49,6 +50,7 @@ app.use('/api/rating',ratingRoutes)
 app.use('/api/recommendations', recommendationsRoute); 
 app.use('/api/messages', messageRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 
 app.use((err, req, res, next) => {

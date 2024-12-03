@@ -26,6 +26,7 @@ import LeaseForm from '../screens/Landlord/LeaseAgreements/LeaseForm';
 import LandlordOwnProfile from '../screens/Landlord/LandlordOwnProfile';
 import ManagePayments from '../screens/Landlord/ManagePayments/ManagePayments';
 import CreateAccount from '../screens/Landlord/ManagePayments/CreateAccount';
+import ManageRequests from '../screens/Landlord/MaintenanceRequests/ManageRequests';
 const Stack = createStackNavigator();
 
 const LandlordNavigator = () => {
@@ -402,6 +403,25 @@ const LandlordNavigator = () => {
         component={CreateAccount}
         options={({navigation}) => ({
           headerTitle: 'Create Stripe Account',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10,
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+          
+        })}
+      />
+        <Stack.Screen
+        name="ManageRequests"
+        component={ManageRequests}
+        options={({navigation}) => ({
+          headerTitle: 'Maintenance Requests',
           headerTitleStyle: {
             fontSize: 22,
             color: Colors.blue,

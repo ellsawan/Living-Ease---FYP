@@ -29,6 +29,8 @@ import LeaseAgreement from '../screens/Tenant/LeaseAgreement/LeaseAgreement';
 import MyProperty from '../screens/Tenant/MyProperty';
 import TenantPublicProfile from '../screens/Tenant/TenantPublicProfile';
 import ManagePayments from '../screens/Tenant/RentPayments/ManagePayments';
+import RecommendedProperties from '../screens/Tenant/RecommendedProperties';
+import ManageRequests from '../screens/Tenant/MaintenanceRequests/ManageRequests';
 const Stack = createStackNavigator();
 
 const TenantNavigator = () => {
@@ -444,6 +446,43 @@ const TenantNavigator = () => {
           ),
         })}
       />
+          <Stack.Screen
+        name="RecommendedProperties"
+        component={RecommendedProperties}
+        options={({navigation}) => ({
+          headerTitle: 'Recommended Properties',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+        <Stack.Screen
+        name="ManageRequests"
+        component={ManageRequests}
+        options={({navigation}) => ({
+          headerTitle: 'Maintenance Requests',
+          headerTitleStyle: {
+            fontSize: 22,
+            color: Colors.blue,
+            fontFamily: fonts.bold,
+            textAlign: 'center',
+            paddingVertical: 10, // Adjust vertical padding
+          },
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+
     </Stack.Navigator>
 
   );

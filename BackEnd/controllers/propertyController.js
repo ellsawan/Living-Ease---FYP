@@ -1,7 +1,7 @@
 const Property = require("../models/Property");
 const cloudinary = require("../config/cloudinary");
 const multer = require("multer");
-
+const mongoose = require('mongoose'); // Import mongoose
 const uploader = cloudinary.uploader;
 const upload = multer({ dest: "./uploads/" });
 
@@ -443,5 +443,45 @@ exports.getRentedPropertyByTenantIdController = async (req, res) => {
   } catch (error) {
     console.error("Error retrieving rented property:", error);
     return res.status(500).json({ error: "Error retrieving rented property", message: error.message });
+  }
+};
+
+ // Ensure this is the correct path to your model
+
+exports.searchPropertiesByIds = async (req, res) => {
+  try {
+    console.log('Request Body:', req.body);
+
+    // Extract propertyIds from request body
+    const propertyIds = req.body.ids;  // Adjusted to match frontend
+    console.log('Incoming propertyIds:', propertyIds);
+
+    // Validate propertyIds
+    if (!propertyIds || !Array.isArray(propertyIds)) {
+      console.error('Invalid property IDs format:', propertyIds);
+      return res.status(400).json({ message: 'Invalid property IDs format. Please provide an array of IDs.' });
+    }
+
+    // Convert and validate each ObjectId
+    const objectIds = propertyIds.map(id => {
+      console.log('Checking ObjectId validity for:', id);
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        console.error(`Invalid ObjectId: ${id}`);
+        throw new Error(`Invalid ObjectId: ${id}`);
+      }
+      return new mongoose.Types.ObjectId(id);
+    });
+
+    // Fetch properties
+    const properties = await Property.find({
+      _id: { $in: objectIds },
+      status: 'listed',
+    });
+
+    console.log('Fetched properties:', properties);
+    return res.status(200).json(properties);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    return res.status(500).json({ error: 'Error retrieving properties', message: error.message });
   }
 };

@@ -6,6 +6,7 @@ import WelcomeScreen from '../screens/common/WelcomeScreen';
 import SignUpScreen from '../screens/Auth/SignUpScreen';
 import SignInScreen from '../screens/Auth/SignInScreen';
 import SelectRoleScreen from '../screens/Auth/SelectRoleScreen';
+import ServiceProviderNavigator from './ServiceProviderNavigator'
 import TenantDashboard from '../screens/Tenant/TenantDashboard';
 import ServiceProviderDashboard from '../screens/ServiceProvider/ServiceProviderDashboard';
 import CustomHeaderBackButton from '../constants/customHeaderBackButton';
@@ -84,7 +85,7 @@ const AuthNavigator = () => {
 
         <Stack.Screen
           name="ServiceProviderDashboard"
-          component={ServiceProviderDashboard}
+          component={ServiceProviderNavigator}
           options={{headerShown: false}}
         />
         <Stack.Screen
