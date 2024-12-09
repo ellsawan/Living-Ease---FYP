@@ -9,7 +9,7 @@ const RatingSchema = new mongoose.Schema({
   },
   review: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
   },
   reviewerId: {
@@ -24,7 +24,7 @@ const RatingSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['Tenant', 'Landlord'], // Role of the user being rated
+    enum: ['Tenant', 'Landlord','ServiceProvider'], // Role of the user being rated
     required: true,
   },
   createdAt: {

@@ -4,6 +4,8 @@ import ServiceProviderBottomTabs from '../screens/ServiceProvider/ServiceProvide
 import ServiceProviderPayments from '../screens/ServiceProvider/ServiceProviderPayments';
 import ServiceProviderSetting from '../screens/ServiceProvider/ServiceProviderSetting';
 import ServiceProviderEditProfile from '../screens/ServiceProvider/ServiceProviderEditProfile';
+import MaintenanceRequestDetails from '../screens/ServiceProvider/MaintenanceRequestDetails';
+import ServiceProviderPublicProfile from '../screens/ServiceProvider/ServiceProviderPublicProfile';
 import Colors from '../constants/Colors';
 import fonts from '../constants/Font';
 import CustomHeaderBackButton from '../constants/customHeaderBackButton';
@@ -71,7 +73,45 @@ const ServiceProviderNavigator = () => {
             ),
           })}
         />
-      
+          
+          <Stack.Screen
+          name="MaintenanceRequestDetails"
+          component={MaintenanceRequestDetails}
+          options={({navigation}) => ({
+            headerTitle: 'Maintenance Request',
+            headerShown: true,
+            headerTitleStyle: {
+              fontSize: 22,
+              color: Colors.blue,
+              fontFamily: fonts.bold,
+              textAlign: 'center',
+              paddingVertical: 10, // Adjust vertical padding
+            },
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+            ),
+          })}
+        />
+                <Stack.Screen
+          name="ServiceProviderPublicProfile"
+          component={ServiceProviderPublicProfile}
+          options={({navigation}) => ({
+            headerTitle: 'Public Profile',
+            headerShown: true,
+            headerTitleStyle: {
+              fontSize: 22,
+              color: Colors.blue,
+              fontFamily: fonts.bold,
+              textAlign: 'center',
+              paddingVertical: 10, // Adjust vertical padding
+            },
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+            ),
+          })}
+        />
       </Stack.Navigator>
   
     );

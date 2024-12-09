@@ -1,11 +1,11 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import fonts from '../../../constants/Font';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-
-const MaintenanceRequestCard = ({request}) => {
-  const {requestTitle, description, category, priority, status, createdAt} =
-    request;
+import Colors from '../../../constants/Colors';
+import { useNavigation } from '@react-navigation/native';
+const MaintenanceRequestCard = ({ request, onReview }) => {
+    const navigation = useNavigation(); // Hook to access navigation
+  const { requestTitle, description, category, priority, status, createdAt,propertyName,location } = request;
 
   // Format the date
   const formattedDate = new Date(createdAt).toLocaleDateString();
@@ -80,7 +80,9 @@ const MaintenanceRequestCard = ({request}) => {
     <View style={styles.card}>
       <Text style={styles.title}>{requestTitle}</Text>
       <Text style={styles.description}>{description}</Text>
-
+      <Text style={styles.tenant}>
+        Tenant: <Text style={styles.tenantName}>{request.tenantId.firstName} {request.tenantId.lastName}</Text>
+      </Text>
       <View style={styles.detailsRow}>
         <Text style={styles.badge}>{category}</Text>
         <Text style={[styles.badge, getPriorityBadgeStyle(priority)]}>
@@ -90,23 +92,29 @@ const MaintenanceRequestCard = ({request}) => {
           {status}
         </Text>
       </View>
-
       <Text style={styles.date}>{formattedDate}</Text>
+
+      {/* Review Button */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity style={[styles.button, styles.reviewButton]} onPress={() => onReview(request)}>
+          <Text style={styles.buttonText}>Review</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    margin: 3,
+    margin: 10,
     padding: 20,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: '#fff',
-    elevation: 3, // Shadow for Android
+    elevation: 5, // Shadow for Android
     shadowColor: '#000', // Shadow for iOS
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     position: 'relative', // Allows absolute positioning for the date
   },
   title: {
@@ -120,12 +128,21 @@ const styles = StyleSheet.create({
     color: Colors.dark,
     marginBottom: 10,
   },
+  tenant: {
+    fontSize: 14,
+    color: Colors.dark,
+    fontFamily: fonts.semiBold,
+    marginBottom: 10,
+  },
+  tenantName: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: Colors.primary,  // Highlight the tenant's name with a distinct color
+  },
   detailsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 10,
-    fontFamily: fonts.semiBold,
-    color: Colors.dark,
   },
   badge: {
     marginRight: 8,
@@ -146,6 +163,28 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10, // Positions the date in the upper right corner
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 15,
+  },
+  button: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: '100%',
+  },
+  reviewButton: {
+    backgroundColor: Colors.primary,
+    borderColor: '#4CAF50',
+    borderRadius: 25,
+  },
+  buttonText: {
+    fontSize: 14,
+    color: '#fff',
+    fontFamily: fonts.semiBold,
+    textAlign: 'center',
   },
 });
 

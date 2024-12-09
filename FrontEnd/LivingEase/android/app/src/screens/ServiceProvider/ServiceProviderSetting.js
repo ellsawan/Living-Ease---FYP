@@ -237,7 +237,7 @@ const SettingsScreen = () => {
       <View style={styles.optionsContainer}>
         <TouchableOpacity
           style={styles.option}
-          onPress={() => navigation.navigate('TenantPublicProfile')}>
+          onPress={() => navigation.navigate('ServiceProviderPublicProfile')}>
           <Icon
             style={styles.icon}
             name="eye-outline"

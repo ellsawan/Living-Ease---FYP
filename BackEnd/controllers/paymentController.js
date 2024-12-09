@@ -7,6 +7,8 @@ const asyncHandler = require("express-async-handler");
 const RentalApplication = require("../models/RentalApplication");
 const LeaseAgreement = require("../models/LeaseAgreement");
 const Properties= require("../models/Property");
+const Notification = require('../models/Notification'); // Import Notification model
+
 // Create Stripe Account
 exports.createStripeAccount = async (req, res) => {
   try {
@@ -206,7 +208,8 @@ exports.processRentPayment = asyncHandler(async (req, res) => {
 });
 
 
-// Confirm Payment Controller
+
+
 exports.confirmPayment = async (req, res) => {
   const { paymentIntentId, paymentStatus } = req.body;
 
@@ -216,17 +219,61 @@ exports.confirmPayment = async (req, res) => {
   }
 
   try {
-    // Find the rent payment by the PaymentIntent ID
-    const rentPayment = await RentPayment.findOne({ paymentIntentId });
+    // Find the rent payment by the PaymentIntent ID and populate tenant and landlord details
+    const rentPayment = await RentPayment.findOne({ paymentIntentId })
+      .populate("tenant", "firstName lastName") // Fetch tenant's firstName and lastName
+      .populate("landlord", "name") // Fetch landlord's name if needed
+      .populate("lease", "propertyId"); // Fetch lease details to get propertyId
 
     if (!rentPayment) {
       return res.status(404).json({ message: "Payment not found" });
     }
 
+    // Extract the month name from the `month` field (e.g., "2024-09")
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+
+    const [year, month] = rentPayment.month.split("-"); // Split "2024-09" into ["2024", "09"]
+    const monthIndex = parseInt(month, 10) - 1; // Convert "09" to 8 (0-based index for array lookup)
+    const monthName = monthNames[monthIndex]; // Get the full month name, e.g., "September"
+
     // Check if the payment status is "completed"
     if (paymentStatus === "completed") {
       // Update the payment status to "completed"
       rentPayment.paymentStatus = "completed";
+
+      // Notification Logic
+      try {
+        const landlordId = rentPayment.landlord._id; // Landlord ID from RentPayment
+        const tenantFirstName = rentPayment.tenant.firstName; // Tenant's first name
+        const tenantLastName = rentPayment.tenant.lastName; // Tenant's last name
+        const tenantFullName = `${tenantFirstName} ${tenantLastName}`; // Tenant's full name
+        const amount = rentPayment.amount; // Payment amount
+
+        // Fetch property details
+        const property = await Properties.findById(rentPayment.lease.propertyId);
+        const propertyName = property ? property.propertyName : "Unknown Property"; // Default if property not found
+
+        // Create a notification for the landlord
+        const notification = new Notification({
+          userId: landlordId,
+          title: "Rent Payment Received",
+          description: `${tenantFullName} has paid ${amount} rent of ${monthName} for your property: ${propertyName}.`,
+        });
+
+        // Save the notification
+        await notification.save();
+
+        // Add console.log to confirm notification addition
+        console.log(
+          `Notification added for landlord (ID: ${landlordId}) regarding tenant: ${tenantFullName} for ${monthName} on property: ${propertyName}`
+        );
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        // Continue without blocking the payment confirmation process
+      }
     } else {
       rentPayment.paymentStatus = "failed"; // or set to 'pending' based on your use case
     }
@@ -244,6 +291,13 @@ exports.confirmPayment = async (req, res) => {
     res.status(500).json({ message: "Error confirming payment" });
   }
 };
+
+
+
+
+
+
+
 
 // Controller to calculate pending payments for a tenant
 exports.getPendingPayments = async (req, res) => {

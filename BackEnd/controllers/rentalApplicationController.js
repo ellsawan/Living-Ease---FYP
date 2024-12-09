@@ -1,6 +1,6 @@
 // controllers/rentalApplicationController.js
 const RentalApplication = require('../models/RentalApplication');
-
+const Notification= require("../models/Notification")
 // Submit rental application
 exports.submitRentalApplication = async (req, res) => {
   try {
@@ -50,32 +50,49 @@ exports.getRentalApplicationsByTenant = async (req, res) => {
 };
 
 
-// Approve or reject a rental application
 exports.updateApplicationStatus = async (req, res) => {
   try {
     const { status, rejectionReason } = req.body; // Extract status and rejectionReason from the request body
 
     // Prepare the update object
     const update = { status };
-
-    // If the status is 'rejected', include the rejectionReason
     if (status === 'rejected') {
       update.rejectionReason = rejectionReason;
     }
 
+    // Fetch and update the rental application
     const updatedApplication = await RentalApplication.findByIdAndUpdate(
       req.params.applicationId,
       update,
       { new: true }
-    );
+    )
+    .populate({ path: 'tenantId', model: 'User' })  // Populate tenant details
+    .populate({ path: 'propertyId', model: 'Property' }); // Populate property details
 
     // Check if the application was found and updated
     if (!updatedApplication) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    res.status(200).json(updatedApplication);
+    // Ensure that propertyName exists before creating the notification
+    const propertyName = updatedApplication.propertyId ? updatedApplication.propertyId.propertyName : 'Unknown Property';
+
+    // Create a notification for the tenant
+    const notification = new Notification({
+      userId: updatedApplication.tenantId._id, // Tenant's user ID
+      title: `Your rental application was ${status}`,
+      description:
+        status === 'accepted'
+          ? `Your rental application for ${propertyName} has been approved.`
+          : `Your rental application for ${propertyName} has been rejected. Reason: ${rejectionReason}`,
+      timestamp: new Date(),
+      isRead: false,
+    });
+    await notification.save();
+
+    res.status(200).json({ message: 'Application status updated and tenant notified.', updatedApplication });
   } catch (error) {
+    console.error('Error updating application status:', error);
     res.status(500).json({ message: 'Failed to update application status', error });
   }
 };

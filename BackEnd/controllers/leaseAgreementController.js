@@ -1,5 +1,6 @@
 const LeaseAgreement = require('../models/LeaseAgreement');
-
+const Notification= require('../models/Notification');
+const Property = require('../models/Property');
 // Create a new lease agreement
 exports.createLeaseAgreement = async (req, res) => {
   try {
@@ -45,7 +46,6 @@ exports.updateLeaseAgreement = async (req, res) => {
 
     // Handle lease termination logic
     if (status === 'Terminated') {
-      // If status is 'Terminated', set the terminationDate to the current date
       leaseToUpdate.status = 'Terminated';
       leaseToUpdate.terminationDate = new Date(); // Set the current date as the termination date
 
@@ -60,6 +60,32 @@ exports.updateLeaseAgreement = async (req, res) => {
       leaseToUpdate.terminationDate = leaseToUpdate.terminationDate || new Date(); // Set terminationDate if it's not already set
     }
 
+    // If the status is updated to 'Active', create a notification for the landlord
+    if (status === 'Active') {
+      const landlordId = leaseToUpdate.landlordId; // Assuming leaseToUpdate has a landlordId field
+
+      // Get the property details from the propertyId in the lease agreement
+      const property = await Property.findById(leaseToUpdate.propertyId);
+      if (!property) {
+        console.error('Property not found');
+        return res.status(404).json({ message: 'Property not found' });
+      }
+
+      // Create a message with the property name
+      const message = `Lease agreement for property ${property.propertyName} has been signed by tenant.`;
+
+      // Create a new notification for the landlord
+      const newNotification = new Notification({
+        userId: landlordId, // Use the landlordId
+        title: 'Lease Agreement Activated',
+        description: message,
+        timestamp: new Date(),
+      });
+
+      // Save the notification
+      await newNotification.save();
+    }
+
     // Update other fields if provided in the request body
     Object.assign(leaseToUpdate, req.body);
 
@@ -68,11 +94,10 @@ exports.updateLeaseAgreement = async (req, res) => {
 
     res.status(200).json(leaseToUpdate);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating lease agreement', error });
+    console.error('Error updating lease agreement:', error); // Log the error for better debugging
+    res.status(500).json({ message: 'Error updating lease agreement', error: error.message });
   }
 };
-
-
 
 exports.checkActiveLease = async (req, res) => {
   const { tenantId } = req.params;

@@ -2,19 +2,24 @@ const mongoose = require('mongoose');
 
 // Define the schema for maintenance requests
 const maintenanceRequestSchema = new mongoose.Schema({
-tenantId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-},
-propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property' },
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  propertyId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Property' 
+  },
   requestTitle: {
     type: String,
     required: true,
+    trim: true,
   },
   description: {
     type: String,
     required: true,
+    trim: true,
   },
   priority: {
     type: String,
@@ -36,19 +41,46 @@ propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property' },
     ],
     default: 'Plumbing',
   },
-
   status: {
     type: String,
-    enum: ['Pending', 'In Progress', 'Completed'],
+    enum: ['Pending', 'Assigned', 'Approved', 'Completed'],
     default: 'Pending',
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  assignedTo: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null, 
+  },
+  bidAmount: { 
+    type: Number,
+    default: 0, 
+  },
+  paymentIntentId: {
+    type: String,
+    required: false,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "completed", "failed"],
+    default: "pending",
+  },
+  paymentDate: {
+    type: Date,
+    default: Date.now,
+  },
+  isRated: {
+    type: Boolean,
+    default: false,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// Create the model from the schema
-const MaintenanceRequest = mongoose.model('MaintenanceRequest', maintenanceRequestSchema);
-
-module.exports = MaintenanceRequest;
+// Export the model
+module.exports = mongoose.model('MaintenanceRequest', maintenanceRequestSchema);

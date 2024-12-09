@@ -73,7 +73,15 @@ const RentPayment = () => {
     try {
       const tenantId = await AsyncStorage.getItem('userId');
       if (!tenantId) throw new Error('Tenant ID not found.');
-  
+  // Check if the landlord has set up their payment
+  if (!stripeAccountId) {
+    Alert.alert(
+      'Payment Error',
+      'The landlord has not set up their payment account yet. Please contact the landlord for assistance.'
+    );
+    setPaymentProcessing(false);
+    return;
+  }
       // Step 1: Create the payment on the backend
       const response = await apiClient.post('/payments/process-rent-payment', {
         leaseId,

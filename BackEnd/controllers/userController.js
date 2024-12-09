@@ -2,6 +2,7 @@ const cloudinaryConfig = require("../config/cloudinary");
 const cloudinary = cloudinaryConfig;
 const { uploader } = cloudinary;
 const User = require("../models/User");
+
 const multer = require("multer");
 const upload = multer({ dest: "./uploads/" });
 

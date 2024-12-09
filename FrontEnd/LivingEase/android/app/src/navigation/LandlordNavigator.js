@@ -27,6 +27,9 @@ import LandlordOwnProfile from '../screens/Landlord/LandlordOwnProfile';
 import ManagePayments from '../screens/Landlord/ManagePayments/ManagePayments';
 import CreateAccount from '../screens/Landlord/ManagePayments/CreateAccount';
 import ManageRequests from '../screens/Landlord/MaintenanceRequests/ManageRequests';
+import MaintenanceRequestReview from '../screens/Landlord/MaintenanceRequests/MaintenanceRequestReview';
+import ServiceProvidersList from '../screens/Landlord/MaintenanceRequests/ServiceProvidersList';
+import ServiceProviderProfile from '../screens/Landlord/MaintenanceRequests/ServiceProviderProfile';
 const Stack = createStackNavigator();
 
 const LandlordNavigator = () => {
@@ -436,6 +439,63 @@ const LandlordNavigator = () => {
           
         })}
       />
+        <Stack.Screen
+          name="MaintenanceRequestReview"
+          component={MaintenanceRequestReview}
+          options={({navigation}) => ({
+            headerTitle: 'Maintenance Request',
+            headerShown: true,
+            headerTitleStyle: {
+              fontSize: 22,
+              color: Colors.blue,
+              fontFamily: fonts.bold,
+              textAlign: 'center',
+              paddingVertical: 10, // Adjust vertical padding
+            },
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+            ),
+          })}
+        />
+        <Stack.Screen
+          name="ServiceProvidersList"
+          component={ServiceProvidersList}
+          options={({navigation}) => ({
+            headerTitle: 'Service Providers',
+            headerShown: true,
+            headerTitleStyle: {
+              fontSize: 22,
+              color: Colors.blue,
+              fontFamily: fonts.bold,
+              textAlign: 'center',
+              paddingVertical: 10, // Adjust vertical padding
+            },
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+            ),
+          })}
+        />
+          <Stack.Screen
+          name="ServiceProviderProfile"
+          component={ServiceProviderProfile}
+          options={({navigation}) => ({
+            headerTitle: 'Service Provider Profile',
+            headerShown: true,
+            headerTitleStyle: {
+              fontSize: 22,
+              color: Colors.blue,
+              fontFamily: fonts.bold,
+              textAlign: 'center',
+              paddingVertical: 10, // Adjust vertical padding
+            },
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <CustomHeaderBackButton onPress={() => navigation.goBack()} />
+            ),
+          })}
+        />
     </Stack.Navigator>
   );
 };
