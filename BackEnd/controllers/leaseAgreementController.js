@@ -171,3 +171,97 @@ exports.deleteLeaseAgreement = async (req, res) => {
     res.status(400).json({ message: 'Error deleting lease agreement', error });
   }
 };
+
+exports.rateUser= async (req, res) => {
+ // Lease ID from the URL
+  const { ratedBy ,leaseId} = req.body; 
+  console.log(req.params)   // `tenant` or `landlord` from the body to identify the rater
+  
+  try {
+    // Find the lease agreement by leaseId
+    const lease = await LeaseAgreement.findById(leaseId);
+
+    if (!lease) {
+      return res.status(404).json({ message: 'Lease agreement not found' });
+    }
+
+    // Depending on who is rating, update the corresponding field
+    if (ratedBy === 'tenant') {
+      if (lease.tenantRated) {
+        return res.status(400).json({ message: 'Tenant has already rated the landlord' });
+      }
+      lease.tenantRated = true;
+    } else if (ratedBy === 'landlord') {
+      if (lease.landlordRated) {
+        return res.status(400).json({ message: 'Landlord has already rated the tenant' });
+      }
+      lease.landlordRated = true;
+    } else {
+      return res.status(400).json({ message: 'Invalid ratedBy value. Use "tenant" or "landlord".' });
+    }
+
+    // Save the updated lease agreement
+    await lease.save();
+    return res.status(200).json({ message: `${ratedBy.charAt(0).toUpperCase() + ratedBy.slice(1)} rating saved successfully`, lease });
+  } catch (error) {
+    console.error('Error in rateUser:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
+exports.checkPendingRatingTenant = async (req, res) => {
+  const { tenantId } = req.params; // Extract tenantId from the request parameters
+
+  try {
+    // Find lease agreements where the tenant is involved and hasn't rated the landlord
+    const pendingRatings = await LeaseAgreement.find({
+      tenantId,
+      status: 'Terminated', // Optional: Only check active leases
+      tenantRated: false, // Check if the tenant hasn't rated
+    }).populate('landlordId propertyId'); // Populate related fields if needed
+
+    if (pendingRatings.length > 0) {
+      return res.status(200).json({
+        hasPendingRating: true,
+        pendingRatings,
+      });
+    }
+
+    return res.status(200).json({
+      hasPendingRating: false,
+      message: 'No pending ratings for this tenant.',
+    });
+  } catch (error) {
+    console.error('Error checking pending ratings:', error.message);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+exports.checkPendingRatingLandlord = async (req, res) => {
+  const { landlordId } = req.params; // Extract landlordId from the request parameters
+
+  try {
+    // Find lease agreements where the landlord is involved and hasn't rated the tenant
+    const pendingRatings = await LeaseAgreement.find({
+      landlordId,
+      status: 'Terminated', // Optional: Only check terminated leases
+      landlordRated: false, // Ensure that the landlord has not rated the tenant yet
+    }).populate('tenantId propertyId'); // Populate related tenant and property data if needed
+
+    if (pendingRatings.length > 0) {
+      // If there are pending ratings, return them with the status
+      return res.status(200).json({
+        hasPendingRating: true,
+        pendingRatings,
+      });
+    }
+
+    // If no pending ratings, return a message indicating this
+    return res.status(200).json({
+      hasPendingRating: false,
+      message: 'No pending ratings for this landlord.',
+    });
+  } catch (error) {
+    console.error('Error checking pending ratings:', error.message);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

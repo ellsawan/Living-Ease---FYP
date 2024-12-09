@@ -43,25 +43,42 @@ const LeaseAgreementScreen = ({route,navigation}) => {
 
   const handleRatingSubmit = async (ratingData) => {
     console.log('Submitted Rating:', ratingData);
-     // Construct the data to be sent to the backend
-     const dataToSend = {
+  
+    // Construct the data to be sent to the backend for the rating
+    const dataToSend = {
       reviewerId,
       rating: ratingData.rating,
       review: ratingData.review,
       ratedEntityId, // ID of the user being rated
       role: role, // Role of the user submitting the rating
-  };
+    };
+  
     try {
+      // First, submit the rating via the current POST /rating/ratings route
       const response = await apiClient.post('/rating/ratings', dataToSend);
       Alert.alert('Success', response.data.message); 
-
-    setIsRatingModalVisible(false);
-    navigation.goBack();
-  } catch (error) {
-    console.error('Error submitting rating:', error);
-    Alert.alert('Error', 'Failed to submit rating. Please try again.'); // Display error message
-}
-};
+  
+      // Now, call the PUT /rate-user/:leaseId route to mark the rating status for the lease
+       // Assuming the lease ID is passed correctly or is accessible
+  
+      // Send the PUT request to mark the rating as done for either tenant or landlord
+      const ratingStatusResponse = await apiClient.put(`leaseagreement/rate-user/${leaseId}`, {
+        ratedBy: 'landlord',
+        leaseId // This will be either 'tenant' or 'landlord' based on the role of the reviewer
+      });
+  
+      // Handle success for the rating status update
+      Alert.alert('Success', ratingStatusResponse.data.message);
+  
+      // Close the rating modal and navigate back
+      setIsRatingModalVisible(false);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      Alert.alert('Error', 'Failed to submit rating. Please try again.'); // Display error message
+    }
+  };
+  
 
  // Function to handle lease termination
  const handleTerminate = ()=> {

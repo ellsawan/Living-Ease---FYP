@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Modal,Alert } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import TopBar from '../common/TopBar';
 import Greeting from '../common/Greeting';
@@ -7,24 +7,78 @@ import SearchBar from './SearchBar';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
 import { useNavigation } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-
-const Stack = createStackNavigator();
-
-const TenantDashboard = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{ headerShown: false }}
-      />
-    </Stack.Navigator>
-  );
-};
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiClient from '../../../../../apiClient';
+import Rating from '../common/Rating';
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
+  const [showRatingModal, setShowRatingModal] = useState(false); // Modal visibility state
+  const [ratingId, setRatingId] = useState(''); 
+
+  useEffect(() => {
+    const checkPendingRatings = async () => {
+      try {
+        const tenantId = await AsyncStorage.getItem('userId');
+        if (!tenantId) {
+          console.warn('Tenant ID not found');
+          return;
+        }
+
+        const response = await apiClient.get(`/leaseagreement/check-pending-rating/${tenantId}`);
+        const { hasPendingRating ,pendingRatings} = response.data;
+        console.log(response.data._id)
+
+        if (hasPendingRating) {
+          setShowRatingModal(true);
+           // Show the modal if there are pending ratings
+           const ratingId = pendingRatings[0]._id;
+           setRatingId(ratingId)
+      console.log('Rating ID:', ratingId);  // Show the modal if there are pending ratings
+        }
+      } catch (error) {
+        console.error('Error checking pending ratings:', error.message);
+      }
+    };
+
+    checkPendingRatings();
+  }, []);
+
+const handleRatingSubmit = async (ratingData) => {
+  try {
+    console.log('Submitted rating data:', ratingData);
+
+    const leaseId = ratingId; // Assuming ratingData includes leaseId
+    const ratingStatusResponse = await apiClient.put(
+      `leaseagreement/rate-user/${leaseId}`,
+      {
+        ratedBy: 'tenant', // Adjust based on the user's role
+        leaseId,
+      }
+    );
+
+    // Show a success alert
+    Alert.alert(
+      'Rating Submitted',
+      ratingStatusResponse.data.message || 'Thank you for your feedback!',
+      [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+      { cancelable: true }
+    );
+
+    setShowRatingModal(false); // Close the modal after submission
+  } catch (error) {
+    console.error('Error submitting rating:', error.message);
+
+    // Show an error alert
+    Alert.alert(
+      'Submission Failed',
+      'An error occurred while submitting your rating. Please try again later.',
+      [{ text: 'OK', onPress: () => console.log('Retry Pressed') }],
+      { cancelable: true }
+    );
+  }
+};
+
   return (
     <View style={styles.container}>
       <TopBar />
@@ -68,6 +122,20 @@ const DashboardScreen = () => {
           onPress={() => navigation.navigate('ManageRequests')}
         />
       </View>
+
+      {/* Rating Modal */}
+      <Modal
+        visible={showRatingModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowRatingModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Rating onSubmit={handleRatingSubmit} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -128,6 +196,19 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textAlign: 'center',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    elevation: 5,
+  },
 });
 
-export default TenantDashboard;
+export default DashboardScreen;

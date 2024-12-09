@@ -4,6 +4,7 @@ import apiClient from '../../../../../apiClient'; // Adjust the import as needed
 import MaintenanceRequestCard from './MaintenanceRequestCard';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
+import debounce from 'lodash.debounce';
 
 const MaintenanceRequestList = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]); // State to store requests
@@ -27,25 +28,33 @@ const MaintenanceRequestList = () => {
   }, []); // Empty dependency array ensures this runs only once on mount
 
   // Handle the search input change
-  const handleSearch = (text) => {
+  const handleSearch = debounce((text) => {
     setSearchText(text);
+  
     if (text === '') {
-      setFilteredRequests(maintenanceRequests); // If search text is empty, show all requests
+      setFilteredRequests(maintenanceRequests); // Show all requests if search is empty
     } else {
-      const filtered = maintenanceRequests.filter(request => 
-        request.title.toLowerCase().includes(text.toLowerCase()) || 
-        request.description.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredRequests(filtered); // Set the filtered requests
+      const filtered = maintenanceRequests.filter(request => {
+        const title = request.title || '';
+        const description = request.description || '';
+        const location = request.location || '';
+  
+        return title.toLowerCase().includes(text.toLowerCase()) ||
+               description.toLowerCase().includes(text.toLowerCase()) ||
+               location.toLowerCase().includes(text.toLowerCase());
+      });
+  
+      setFilteredRequests(filtered);
     }
-  };
-
+  }, 300); // 300ms debounce delay
+  
+  
   return (
     <View style={styles.container}>
       {/* Search Bar */}
       <TextInput
         style={styles.searchBar}
-        placeholder="Search by title or description"
+        placeholder="Search by title, description, or location"
         value={searchText}
         onChangeText={handleSearch}
       />

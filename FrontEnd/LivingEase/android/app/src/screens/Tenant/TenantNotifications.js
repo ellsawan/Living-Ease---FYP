@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import axios from 'axios';
 import apiClient from '../../../../../apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../../constants/Colors';
@@ -10,6 +9,7 @@ const NotificationsScreen = () => {
   const [notifications, setNotifications] = useState([]);
   const [userId, setUserId] = useState(null);
 
+  // Get User ID from AsyncStorage
   useEffect(() => {
     const getUserId = async () => {
       try {
@@ -25,12 +25,22 @@ const NotificationsScreen = () => {
     getUserId();
   }, []);
 
+  // Fetch notifications and mark all unread notifications as read
   useEffect(() => {
     if (userId) {
       const fetchNotifications = async () => {
         try {
           const response = await apiClient.get(`/notification/notifications/${userId}`);
           setNotifications(response.data.notifications);
+
+          // Mark all unread notifications as read
+          const unreadNotifications = response.data.notifications.filter(
+            (notification) => !notification.isRead
+          );
+
+          if (unreadNotifications.length > 0) {
+            await markAllAsRead(unreadNotifications);
+          }
         } catch (error) {
           console.error('Error fetching notifications:', error);
         }
@@ -39,6 +49,42 @@ const NotificationsScreen = () => {
       fetchNotifications();
     }
   }, [userId]);
+
+  // Mark all notifications as read
+  const markAllAsRead = async (unreadNotifications) => {
+    try {
+      await Promise.all(
+        unreadNotifications.map((notification) =>
+          apiClient.patch(`/notification/${notification._id}/markAsRead`)
+        )
+      );
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          unreadNotifications.some((unread) => unread._id === notification._id)
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    }
+  };
+
+  // Mark individual notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      await apiClient.patch(`/notification/${notificationId}/markAsRead`);
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification._id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
 
   if (!userId) {
     return (
@@ -60,7 +106,13 @@ const NotificationsScreen = () => {
           data={notifications}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.notificationCard} onPress={() => {}}>
+            <TouchableOpacity
+              style={[
+                styles.notificationCard,
+                item.isRead ? styles.readCard : styles.unreadCard, // Style based on read/unread status
+              ]}
+              onPress={() => markAsRead(item._id)} // Mark as read on click
+            >
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.description}>{item.description}</Text>
               <Text style={styles.timestamp}>
@@ -88,7 +140,6 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     padding: 16,
-    backgroundColor: '#fff',
     marginBottom: 12,
     borderRadius: 10,
     elevation: 3,
@@ -96,6 +147,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+  },
+  unreadCard: {
+    backgroundColor: '#fff',
+  },
+  readCard: {
+    backgroundColor: '#f2f2f2', // Lighter background for read notifications
   },
   title: {
     fontSize: 18,

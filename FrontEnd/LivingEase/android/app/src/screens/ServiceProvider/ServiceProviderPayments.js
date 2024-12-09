@@ -96,7 +96,10 @@ const CreateStripeAccountScreen = () => {
       Alert.alert('Error', 'User ID is required.');
       return;
     }
-
+    if (accountStatus === 'enabled') {
+      Alert.alert('Account Already Created', 'You already have an account.');
+      return;
+    }
     setLoading(true);
     try {
       const response = await apiClient.post('/payments/create-stripe-account', { userId });

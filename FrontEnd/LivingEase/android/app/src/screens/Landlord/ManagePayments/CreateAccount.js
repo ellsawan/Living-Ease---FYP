@@ -99,11 +99,9 @@ const CreateStripeAccountScreen = () => {
         {accountStatus === 'enabled' ? (
           <>
             <Text style={styles.infoText}>
-              Your Stripe account is enabled! 🎉
+              Your Stripe account is already enabled! 🎉
             </Text>
-            <Text style={styles.infoText}>
-              Stripe Account ID: {stripeAccountId || 'N/A'}
-            </Text>
+       
           </>
         ) : (
           accountStatus === null && <ActivityIndicator size="large" color="#007bff" />
@@ -186,6 +184,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  infoText: {
+    color: Colors.primary,
+    fontSize: 16,
+    fontFamily:fonts.bold,
   },
   loadingIndicator: {
     flex: 1,

@@ -1,6 +1,7 @@
 const Rating = require('../models/Rating'); // Import the Rating model
 const User = require('../models/User'); // Import the User model if needed
 const MaintenanceRequest = require('../models/MaintenanceRequest'); 
+const Notification = require('../models/Notification');
 // Controller to create a new rating
 exports.createRating = async (req, res) => {
   const { rating, review, ratedEntityId, role } = req.body;
@@ -22,13 +23,15 @@ exports.createRating = async (req, res) => {
     });
 
     await newRating.save();
-    return res.status(201).json({ message: "Rating submitted successfully.", newRating });
+
+
+
+    return res.status(201).json({ message: "Rating submitted successfully and notification sent.", newRating });
   } catch (error) {
     console.error("Error creating rating:", error);
     return res.status(500).json({ message: "Server error." });
   }
 };
-
 
 // Controller to get ratings for a specific user
 exports.getUserRatings = async (req, res) => {

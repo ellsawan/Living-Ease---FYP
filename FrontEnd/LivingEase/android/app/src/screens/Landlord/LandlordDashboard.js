@@ -1,30 +1,106 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Alert,
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import TopBar from '../common/TopBar';
 import Greeting from '../common/Greeting';
-import { useNavigation } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import {useNavigation} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
 import fonts from '../../constants/Font';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Rating from '../common/Rating';
+import apiClient from '../../../../../apiClient';
 const Stack = createStackNavigator();
-
 const LandlordDashboard = () => {
   const navigation = useNavigation();
+
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   );
 };
 
 const DashboardScreen = () => {
+  const [ratingId, setRatingId] = useState('');
+
+  useEffect(() => {
+    const checkPendingRatings = async () => {
+      try {
+        const landlordId = await AsyncStorage.getItem('userId');
+        if (!landlordId) {
+          console.warn('Landlord ID not found');
+          return;
+        }
+
+        const response = await apiClient.get(
+          `/leaseagreement/check-pending-rating-landlord/${landlordId}`,
+        );
+        const {hasPendingRating, pendingRatings} = response.data;
+        console.log('API Response:', response.data);
+
+        if (hasPendingRating && pendingRatings.length > 0) {
+          setShowRatingModal(true);
+          const ratingId = pendingRatings[0]._id;
+          setRatingId(ratingId);
+          console.log('Rating ID:', ratingId); // Ensuring the correct ID is set
+        } else {
+          console.log('No pending ratings.');
+        }
+      } catch (error) {
+        console.error('Error checking pending ratings:', error.message);
+      }
+    };
+
+    checkPendingRatings();
+  }, []);
+
   const navigation = useNavigation();
+  const [showRatingModal, setShowRatingModal] = useState(false);
+
+  const handleRatingSubmit = async ratingData => {
+    try {
+      console.log('Submitted rating data:', ratingData);
+      const leaseId = ratingId;
+
+      const ratingStatusResponse = await apiClient.put(
+        `leaseagreement/rate-user/${leaseId}`,
+        {
+          ratedBy: 'landlord',
+          leaseId,
+        },
+      );
+
+      Alert.alert(
+        'Rating Submitted',
+        ratingStatusResponse.data.message || 'Thank you for your feedback!',
+        [{text: 'OK', onPress: () => console.log('OK Pressed')}],
+        {cancelable: true},
+      );
+
+      setShowRatingModal(false); // Close the modal after submission
+    } catch (error) {
+      console.error('Error submitting rating:', error.message);
+
+      Alert.alert(
+        'Submission Failed',
+        'An error occurred while submitting your rating. Please try again later.',
+        [{text: 'OK', onPress: () => console.log('Retry Pressed')}],
+        {cancelable: true},
+      );
+    }
+  };
   return (
     <View style={styles.container}>
       <TopBar />
@@ -67,11 +143,23 @@ const DashboardScreen = () => {
           onPress={() => navigation.navigate('ManageRequests')}
         />
       </View>
+
+      {/* Rating Modal */}
+      <Modal
+        visible={showRatingModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowRatingModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Rating onSubmit={handleRatingSubmit} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
-
-const DashboardCard = ({ title, icon, description, onPress }) => {
+const DashboardCard = ({title, icon, description, onPress}) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       <View style={styles.cardContent}>
@@ -99,7 +187,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 20,
     shadowColor: Colors.dark,
-    shadowOffset: { width: 40, height: 40 },
+    shadowOffset: {width: 40, height: 40},
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
@@ -126,6 +214,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     color: Colors.primary,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    elevation: 5,
   },
 });
 

@@ -25,5 +25,10 @@ router.get('/landlord/:landlordId', leaseAgreementController.getLeaseAgreementsB
 router.delete('/:id', leaseAgreementController.deleteLeaseAgreement);
 // Route to check if a tenant has an active lease
 router.get('/active/:tenantId', leaseAgreementController.checkActiveLease);
-
+// Route to mark tenant or landlord rating as true
+router.put('/rate-user/:leaseId', leaseAgreementController.rateUser);  // Add this route
+//check pending ratings
+router.get('/check-pending-rating/:tenantId', leaseAgreementController.checkPendingRatingTenant);
+//check pending ratings of landlord
+router.get('/check-pending-rating-landlord/:landlordId', leaseAgreementController.checkPendingRatingLandlord);
 module.exports = router;

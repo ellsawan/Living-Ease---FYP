@@ -77,6 +77,14 @@ const leaseAgreementSchema = new mongoose.Schema({
     type: Date,
     default: null, // Null means the lease is not terminated yet
   },
+  landlordRated: {
+    type: Boolean,
+    default: false, // To track if the landlord has rated the tenant
+  },
+  tenantRated: {
+    type: Boolean,
+    default: false, // To track if the tenant has rated the landlord
+  },
 });
 
 // Pre-save middleware to update the `updatedAt` field before each save

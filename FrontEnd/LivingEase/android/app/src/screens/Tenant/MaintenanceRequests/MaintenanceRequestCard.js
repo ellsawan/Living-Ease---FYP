@@ -1,11 +1,13 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import fonts from '../../../constants/Font';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import Colors from '../../../constants/Colors';
 
-const MaintenanceRequestCard = ({request}) => {
-  const {requestTitle, description, category, priority, status, createdAt} =
-    request;
+const MaintenanceRequestCard = ({ request }) => {
+  const { requestTitle, description, category, priority, status, createdAt, assignedTo } = request;
+
+  const navigation = useNavigation(); // Initialize navigation
 
   // Format the date
   const formattedDate = new Date(createdAt).toLocaleDateString();
@@ -80,7 +82,7 @@ const MaintenanceRequestCard = ({request}) => {
     <View style={styles.card}>
       <Text style={styles.title}>{requestTitle}</Text>
       <Text style={styles.description}>{description}</Text>
-
+      <Text style={styles.description}>{assignedTo}</Text>
       <View style={styles.detailsRow}>
         <Text style={styles.badge}>{category}</Text>
         <Text style={[styles.badge, getPriorityBadgeStyle(priority)]}>
@@ -92,6 +94,15 @@ const MaintenanceRequestCard = ({request}) => {
       </View>
 
       <Text style={styles.date}>{formattedDate}</Text>
+
+      {assignedTo && (
+        <TouchableOpacity
+          style={styles.viewButton}
+          onPress={() => navigation.navigate('ServiceProviderDetails', { serviceProviderId: assignedTo })}
+        >
+          <Text style={styles.viewButtonText}>View Service Provider</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -106,7 +117,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', // Shadow for iOS
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     position: 'relative', // Allows absolute positioning for the date
   },
   title: {
@@ -146,6 +157,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10, // Positions the date in the upper right corner
+  },
+  viewButton: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+  },
+  viewButtonText: {
+    fontFamily: fonts.semiBold,
+    color: '#fff',
+    fontSize: 14,
   },
 });
 
