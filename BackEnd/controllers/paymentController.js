@@ -8,7 +8,7 @@ const RentalApplication = require("../models/RentalApplication");
 const LeaseAgreement = require("../models/LeaseAgreement");
 const Properties= require("../models/Property");
 const Notification = require('../models/Notification'); // Import Notification model
-
+const CommissionFee = require("../models/Commission");
 // Create Stripe Account
 exports.createStripeAccount = async (req, res) => {
   try {
@@ -161,6 +161,7 @@ exports.checkStripeAccountStatus = async (req, res) => {
   }
 };
 
+
 exports.processRentPayment = asyncHandler(async (req, res) => {
   const { tenantId, landlordId, leaseId, rentDue, landlordStripeId, month } = req.body;
 
@@ -170,13 +171,26 @@ exports.processRentPayment = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Create a PaymentIntent on Stripe for the rent amount
+    // Fetch the commission fee
+    const commissionFee = await CommissionFee.findOne();
+    if (!commissionFee) {
+      return res.status(500).json({ message: "Commission fee is not configured" });
+    }
+
+    // Calculate the service fee
+    const serviceFee = (commissionFee.fee / 100) * rentDue; // Assuming fee is in percentage
+    const totalAmount = Math.round(rentDue * 100); // Total amount in cents
+    const landlordAmount = Math.round((rentDue - serviceFee) * 100); // Landlord amount in cents
+
+    // Create a PaymentIntent on Stripe
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(rentDue * 100), // Stripe expects the amount in cents
+      amount: totalAmount,
+      application_fee_amount: serviceFee,
       currency: "usd", // Adjust as per your currency
       metadata: { leaseId, tenantId, landlordId },
       transfer_data: {
         destination: landlordStripeId, // Route payment to landlord's Stripe account
+        // Landlord receives rent minus service fee
       },
     });
 
@@ -186,9 +200,10 @@ exports.processRentPayment = asyncHandler(async (req, res) => {
       tenant: tenantId,
       landlord: landlordId,
       amount: rentDue,
+      serviceFee, // Save calculated service fee
       paymentIntentId: paymentIntent.id, // Store the PaymentIntent ID
       paymentStatus: "pending", // Set as pending until confirmation
-      month: month, // Store the month in the database
+      month, // Store the month in the database
     });
 
     await rentPayment.save();
@@ -199,15 +214,12 @@ exports.processRentPayment = asyncHandler(async (req, res) => {
       message: "Payment initialized. Please confirm the payment via client.",
     });
   } catch (error) {
-    // Return a generic error message without exposing the internal error
-    console.error("Error creating payment:", error);
+    console.error("Error processing rent payment:", error);
     res.status(500).json({
       message: "An error occurred while processing your payment. Please try again later.",
     });
   }
 });
-
-
 
 
 exports.confirmPayment = async (req, res) => {
@@ -421,16 +433,16 @@ exports.getPendingPaymentsForLandlord = async (req, res) => {
   const { landlordId } = req.params;
 
   try {
-    console.log(req.body)
+    console.log(req.body);
+    
     // Fetch active leases for the landlord
     const leases = await LeaseAgreement.find({
       landlordId: landlordId,
     });
 
+    // Return a 200 OK with an empty array and message if no leases are found
     if (!leases.length) {
-      return res
-        .status(404)
-        .json({ message: "No active leases found for this landlord." });
+      return res.status(200).json({ message: "No active leases found for this landlord.", data: [] });
     }
 
     const pendingPayments = [];
@@ -535,6 +547,7 @@ exports.getPendingPaymentsForLandlord = async (req, res) => {
       .json({ message: "Server error. Please try again later." });
   }
 };
+
 
 // Controller to get paid payments for a specific tenant
 exports.getPaidPaymentsforTenant = async (req, res) => {

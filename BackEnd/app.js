@@ -18,6 +18,7 @@ const maintenanceRoutes=require('./routes/maintenanceRoutes');
 const notificationRoutes=require('./routes/notificationRoutes');
 const serviceProviderRoutes=require('./routes/serviceproviderRoutes');
 const bidRoutes = require('./routes/bidRoutes');
+const commissionRoutes= require ('./routes/commissionRoutes')
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 const timeout = require('connect-timeout');
@@ -57,6 +58,7 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/serviceprovider', serviceProviderRoutes);
 app.use('/api/bid', bidRoutes);
+app.use('/api/commission', commissionRoutes);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');

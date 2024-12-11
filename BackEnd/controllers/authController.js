@@ -82,17 +82,18 @@ exports.loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(200).json({ success: false, message: "User not found" });
     }
 
     // Compare the hashed password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(200).json({ success: false, message: "Invalid password" });
     }
 
     res.status(200).json({
+      success: true,
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -102,10 +103,11 @@ exports.loginUser = async (req, res) => {
     });
   } catch (error) {
     // Comment out the console log or log a generic error
-    // console.error("Login user error: ", error.message); 
-    res.status(500).json({ message: "Server error" });
+    // console.error("Login user error: ", error.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 
 exports.logoutUser = (req, res) => {

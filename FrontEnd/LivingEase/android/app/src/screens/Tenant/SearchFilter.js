@@ -122,30 +122,56 @@ const SearchFilter = ({route}) => {
     const maxRent = parseFloat(maxRentPrice);
     const minProperty = parseFloat(minPropertySize);
     const maxProperty = parseFloat(maxPropertySize);
-  
+
+    // List of all available categories
+    const allCategories = [
+      'House',
+      'Flat',
+      'Lower Portion',
+      'Upper Portion',
+      'Room',
+      'Farm House',
+      'Guest House',
+      'Annexe',
+      'Basement',
+    ];
+
+    // Ensure that categories are set to all categories if propertyType is empty or undefined
+    const finalCategory =
+      propertyType === '' || propertyType === undefined || category.length === 0
+        ? allCategories
+        : category;
+
+    // Validate input values
     if ((minRentPrice && isNaN(minRent)) || (maxRentPrice && isNaN(maxRent))) {
       Alert.alert('Error', 'Rent values must be numeric.');
       return;
     }
-  
-    if ((minPropertySize && isNaN(minProperty)) || (maxPropertySize && isNaN(maxProperty))) {
+
+    if (
+      (minPropertySize && isNaN(minProperty)) ||
+      (maxPropertySize && isNaN(maxProperty))
+    ) {
       Alert.alert('Error', 'Property size values must be numeric.');
       return;
     }
-  
+
     if (minRentPrice && maxRentPrice && minRent > maxRent) {
       Alert.alert('Error', 'Maximum rent cannot be less than minimum rent.');
       return;
     }
-  
+
     if (minPropertySize && maxPropertySize && minProperty > maxProperty) {
-      Alert.alert('Error', 'Maximum property size cannot be less than minimum property size.');
+      Alert.alert(
+        'Error',
+        'Maximum property size cannot be less than minimum property size.',
+      );
       return;
     }
-  
+
     const searchParams = {
       propertyType,
-      category: category.join(', '),
+      category: finalCategory.join(', '), // Join the array of categories into a string
       minRentPrice: minRentPrice ? minRentPrice : undefined,
       maxRentPrice: maxRentPrice ? maxRentPrice : undefined,
       bedrooms:
@@ -168,7 +194,7 @@ const SearchFilter = ({route}) => {
       latitude: locationLatLng?.coordinates?.[1] || '',
       distance: parseFloat(distance),
     };
-  
+
     // Filter out undefined and null values
     const filteredSearchParams = {};
     Object.keys(searchParams).forEach(key => {
@@ -177,25 +203,22 @@ const SearchFilter = ({route}) => {
         filteredSearchParams[key] = value;
       }
     });
-  
+
     try {
-     
       const response = await apiClient.get('/property/search', {
         params: filteredSearchParams,
       });
-      
+
       navigation.navigate('Properties', {
         searchParams: response.data,
-        filteredSearchParams: filteredSearchParams
+        filteredSearchParams: filteredSearchParams,
       });
-      console.log('navigating with',filteredSearchParams)
+      console.log('navigating with', filteredSearchParams);
     } catch (error) {
       console.error('Error fetching search results:', error);
     }
   };
-  
-    
-  
+
   const handleSizeUnitSelect = unit => {
     setSelectedSizeUnit(unit);
     setSizeUnit(unit);

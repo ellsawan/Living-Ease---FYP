@@ -170,8 +170,9 @@ exports.getTenantMaintenanceRequests = async (req, res) => {
     const maintenanceRequests = await MaintenanceRequest.find({ tenantId });
 
     if (maintenanceRequests.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         message: 'No maintenance requests found for this tenant.',
+        data: [],
       });
     }
 
@@ -188,6 +189,7 @@ exports.getTenantMaintenanceRequests = async (req, res) => {
     });
   }
 };
+
 //controller to fetch maintenance requests for landlord
 exports.getLandlordMaintenanceRequests = async (req, res) => {
   const { landlordId } = req.params; // Get the landlord ID from the route parameters
@@ -197,8 +199,10 @@ exports.getLandlordMaintenanceRequests = async (req, res) => {
     const properties = await Property.find({ owner: landlordId }, '_id propertyName location'); // Fetch only the required fields
 
     if (!properties || properties.length === 0) {
-      return res.status(404).json({
+      // Return a success response with an empty array
+      return res.status(200).json({
         message: 'No properties found for this landlord.',
+        data: [], // Empty data array
       });
     }
 
@@ -222,8 +226,10 @@ exports.getLandlordMaintenanceRequests = async (req, res) => {
       .sort({ createdAt: -1 }); // Sort by created date, latest first
 
     if (maintenanceRequests.length === 0) {
-      return res.status(404).json({
+      // Return a success response with an empty array
+      return res.status(200).json({
         message: 'No maintenance requests found for this landlord.',
+        data: [], // Empty data array
       });
     }
 
@@ -250,6 +256,7 @@ exports.getLandlordMaintenanceRequests = async (req, res) => {
     });
   }
 };
+
 
 // Controller function to update the status of a maintenance request
 exports.updateMaintenanceRequestStatus = async (req, res) => {

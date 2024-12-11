@@ -151,14 +151,17 @@ exports.getLeaseAgreementsByTenantId = async (req, res) => {
     try {
       const landlordId = req.params.landlordId;
       const leaseAgreements = await LeaseAgreement.find({ landlordId }).populate('tenantId landlordId propertyId applicationId');
-      if (!leaseAgreements.length) {
-        return res.status(404).json({ message: 'No lease agreements found for this landlord' });
+  
+      if (leaseAgreements.length === 0) {
+        return res.status(200).json({ message: 'No lease agreements found for this landlord', data: [] });
       }
+  
       res.status(200).json(leaseAgreements);
     } catch (error) {
-      res.status(400).json({ message: 'Error fetching lease agreements for landlord', error });
+      res.status(500).json({ message: 'Error fetching lease agreements for landlord', error: error.message });
     }
   };
+  
   // Delete a lease agreement
 exports.deleteLeaseAgreement = async (req, res) => {
   try {

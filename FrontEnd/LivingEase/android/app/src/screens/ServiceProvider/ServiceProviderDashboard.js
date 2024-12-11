@@ -4,7 +4,6 @@ import apiClient from '../../../../../apiClient'; // Adjust the import as needed
 import MaintenanceRequestCard from './MaintenanceRequestCard';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
-import debounce from 'lodash.debounce';
 
 const MaintenanceRequestList = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]); // State to store requests
@@ -17,8 +16,8 @@ const MaintenanceRequestList = () => {
     apiClient
       .get('/maintenance/requests') // Adjust the endpoint according to your API
       .then(response => {
-        setMaintenanceRequests(response.data); // Set the data in state
-        setFilteredRequests(response.data); // Initially display all requests
+        setMaintenanceRequests(response.data.filter(request => request.status === 'Approved')); // Filter requests with status 'Approved'
+        setFilteredRequests(response.data.filter(request => request.status === 'Approved')); // Initially display approved requests only
         setLoading(false); // Stop loading once data is fetched
       })
       .catch(error => {
@@ -28,27 +27,29 @@ const MaintenanceRequestList = () => {
   }, []); // Empty dependency array ensures this runs only once on mount
 
   // Handle the search input change
-  const handleSearch = debounce((text) => {
+  const handleSearch = (text) => {
     setSearchText(text);
-  
+
     if (text === '') {
       setFilteredRequests(maintenanceRequests); // Show all requests if search is empty
     } else {
       const filtered = maintenanceRequests.filter(request => {
         const title = request.title || '';
         const description = request.description || '';
-        const location = request.location || '';
-  
+        const location = request.propertyId.location ? request.propertyId.location.trim().toLowerCase() : '';
+        
+        // Log location for debugging
+        console.log('Location new:', location);
+
         return title.toLowerCase().includes(text.toLowerCase()) ||
                description.toLowerCase().includes(text.toLowerCase()) ||
-               location.toLowerCase().includes(text.toLowerCase());
+               location.includes(text.toLowerCase());
       });
-  
+
       setFilteredRequests(filtered);
     }
-  }, 300); // 300ms debounce delay
-  
-  
+  };
+
   return (
     <View style={styles.container}>
       {/* Search Bar */}
@@ -92,9 +93,8 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 8,
     paddingLeft: 20,
-    borderRadius:25,
-    fontFamily:fonts.semiBold,
-
+    borderRadius: 25,
+    fontFamily: fonts.semiBold,
   },
   loadingContainer: {
     flex: 1,

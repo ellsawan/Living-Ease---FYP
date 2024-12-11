@@ -62,15 +62,24 @@ export default function MyProperty() {
   const fetchRentedProperties = async (tenantId) => {
     try {
       const response = await apiClient.get(`/property/${tenantId}/rented-property`);
-      if (response.data && response.data.property) {
-        setProperty(response.data.property); // Update property state with response's property field
+  
+      // Check if the response indicates that no property was found
+      if (response.data && response.data.property === null) {
+        setProperty(null); // No property found, set property to null
+        setError(null); // Clear any existing errors
+        console.log(response.data.message); // Optionally log the message
+      } else if (response.data && response.data.property) {
+        setProperty(response.data.property); // Update property state with the response's property
+        setError(null); // Clear any existing errors
       }
+  
       console.log(response.data); // Log the entire response for debugging
     } catch (error) {
       console.error('Error fetching rented properties', error);
       setError('Failed to fetch rented properties.');
     }
   };
+  
 
   if (loading) {
     return (

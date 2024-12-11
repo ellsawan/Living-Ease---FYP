@@ -14,7 +14,8 @@ import { WebView } from 'react-native-webview';
 import apiClient from '../../../../../apiClient';
 import Colors from '../../constants/Colors';
 import fonts from '../../constants/Font';
-
+import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 const CreateStripeAccountScreen = () => {
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(false);

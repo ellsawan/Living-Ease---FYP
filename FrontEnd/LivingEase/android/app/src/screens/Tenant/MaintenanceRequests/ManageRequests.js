@@ -49,16 +49,22 @@ export default function ManageRequests() {
   const fetchRequests = async () => {
     try {
       const response = await apiClient.get(`/maintenance/tenant/${tenantId}/requests`);
+  
       if (response.status === 200) {
         const requestsData = response.data.data;
-        setRequests(requestsData);
+        if (requestsData.length === 0) {
+          setRequests([]); // If no requests, set an empty array
+        } else {
+          setRequests(requestsData); // Set the requests data
+        }
       } else {
-        console.error('Failed to fetch requests:', response.data.message);
+        console.log('Failed to fetch requests:', response.data.message);
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
     }
   };
+  
 
   const handleRequestSubmission = async () => {
     if (!requestTitle || !description || !tenantId) {
@@ -129,7 +135,12 @@ export default function ManageRequests() {
               />
               <Text style={styles.label}>Category</Text>
               <View style={styles.inlineOptions}>
-                {['Plumbing', 'Electrical', 'Cleaning'].map((item) => (
+                {['Plumbing', 'Electrical', 'Cleaning','Carpentry',
+      'Painting',
+      'Landscaping',
+      'Pest Control',
+      'Security Services',
+      'Home Appliance Repair',].map((item) => (
                   <TouchableOpacity
                     key={item}
                     style={[styles.option, category === item && styles.optionSelected]}
@@ -298,6 +309,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 10,
+    marginBottom:5,
   },
   emptyMessage: {
     textAlign: 'center',

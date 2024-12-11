@@ -82,7 +82,6 @@ const MaintenanceRequestCard = ({ request }) => {
     <View style={styles.card}>
       <Text style={styles.title}>{requestTitle}</Text>
       <Text style={styles.description}>{description}</Text>
-      <Text style={styles.description}>{assignedTo}</Text>
       <View style={styles.detailsRow}>
         <Text style={styles.badge}>{category}</Text>
         <Text style={[styles.badge, getPriorityBadgeStyle(priority)]}>
@@ -109,7 +108,7 @@ const MaintenanceRequestCard = ({ request }) => {
 
 const styles = StyleSheet.create({
   card: {
-    margin: 3,
+    margin: 5,
     padding: 20,
     borderRadius: 8,
     backgroundColor: '#fff',

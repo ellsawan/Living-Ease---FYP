@@ -255,8 +255,12 @@ exports.getPropertiesByUserController = async (req, res) => {
     // Find properties by owner ID and populate the owner field
     const properties = await Property.find({ owner: req.user.id }).populate('owner');
 
+    // Handle case where no properties are found
     if (!properties.length) {
-      return res.status(404).json({ message: "This owner does not have any properties listed." });
+      return res.status(200).json({
+        message: "This owner does not have any properties listed.",
+        properties: [], // Return an empty array
+      });
     }
 
     return res.status(200).json({
@@ -265,9 +269,13 @@ exports.getPropertiesByUserController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error retrieving properties:", error);
-    return res.status(500).json({ error: "Error retrieving properties", message: error.message });
+    return res.status(500).json({
+      error: "Error retrieving properties",
+      message: error.message,
+    });
   }
 };
+
 
 exports.getPropertyByIdController = async (req, res) => {
   try {
@@ -432,8 +440,12 @@ exports.getRentedPropertyByTenantIdController = async (req, res) => {
     // Find the property where the rentedBy field matches the tenant's ID
     const rentedProperty = await Property.findOne({ rentedBy: tenantId }).populate('rentedBy');
 
+    // If no rented property is found, return a response without an error status
     if (!rentedProperty) {
-      return res.status(404).json({ message: "No property rented by this tenant." });
+      return res.status(200).json({
+        message: "No property rented by this tenant.",
+        property: null,
+      });
     }
 
     return res.status(200).json({
@@ -442,9 +454,13 @@ exports.getRentedPropertyByTenantIdController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error retrieving rented property:", error);
-    return res.status(500).json({ error: "Error retrieving rented property", message: error.message });
+    return res.status(500).json({
+      message: "Error retrieving rented property",
+      error: error.message || "Internal Server Error",
+    });
   }
 };
+
 
  // Ensure this is the correct path to your model
 

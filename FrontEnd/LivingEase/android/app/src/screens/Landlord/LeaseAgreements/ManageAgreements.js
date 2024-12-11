@@ -27,23 +27,29 @@ const ManageAgreements = () => {
     React.useCallback(() => {
       const fetchLeaseAgreements = async () => {
         if (!landlordId) return;
-
-        setLoading(true); // Show loader before fetching
+  
+        setLoading(true);
         try {
           const response = await apiClient.get(`/leaseAgreement/landlord/${landlordId}`);
-          setLeaseAgreements(response.data);
+          const data = Array.isArray(response.data) ? response.data : [];
+          console.log("API Response Data:", data);
+          setLeaseAgreements(data);
         } catch (error) {
           console.error("Error fetching lease agreements:", error);
+          setLeaseAgreements([]); // Fallback
         } finally {
           setLoading(false);
         }
       };
-
+  
       fetchLeaseAgreements();
-    }, [landlordId]) // Depend on landlordId to re-fetch when it changes
+    }, [landlordId])
   );
-
-  const filteredLeases = leaseAgreements.filter(lease => lease.status === activeTab);
+  
+  const filteredLeases = Array.isArray(leaseAgreements)
+    ? leaseAgreements.filter(lease => lease.status === activeTab)
+    : [];
+  
 
   const handleCreateLeaseAgreement = () => {
     navigation.navigate('ApprovedApplications'); // Replace with your actual route name
