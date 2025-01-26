@@ -1,42 +1,45 @@
-**Living Ease - Final Year Project - BS Software Engineering**
-In today’s rental market, the process of managing properties and handling rental tasks can be a 
-challenge for both **tenants and landlords**. Tenants often face difficulties finding suitable properties, 
-while landlords struggle to manage listings, payments, and maintenance requests. The existing 
-rental systems lack seamless communication and often require manual intervention, leading to 
-inefficiency and frustration for both parties. 
-To address these challenges, **Living Ease** has been developed as a comprehensive solution. It is a 
-**mobile application** designed to simplify and streamline the entire rental process. Living Ease 
-connects tenants, landlords, and service providers in a unified platform, eliminating the need for 
-separate systems. Tenants can easily browse and save properties, submit rental applications, 
-schedule viewings, and access maintenance services. Landlords can efficiently manage property 
-listings, track payments, and communicate directly with tenants. 
-Living Ease leverages advanced features such as **AI-powered property recommendations** and 
-**geospatial analysis** In today’s rental market, the process of managing properties and handling rental tasks can be a 
-challenge for both tenants and landlords. Tenants often face difficulties finding suitable properties, 
-while landlords struggle to manage listings, payments, and maintenance requests. The existing 
-rental systems lack seamless communication and often require manual intervention, leading to 
-inefficiency and frustration for both parties. 
-To address these challenges, Living Ease has been developed as a comprehensive solution. It is a 
-mobile application designed to simplify and streamline the entire rental process. Living Ease 
-connects tenants, landlords, and service providers in a unified platform, eliminating the need for 
-separate systems. Tenants can easily browse and save properties, submit rental applications, 
-schedule viewings, and access maintenance services. Landlords can efficiently manage property 
-listings, track payments, and communicate directly with tenants. 
-Living Ease leverages advanced features such as AI-powered property recommendations and 
-geospatial analysis to provide a personalized and seamless user experience. Tenants receive 
-property suggestions based on their preferences and search history, while landlords can view 
-detailed information about nearby amenities to make informed decisions. 
-The platform also incorporates a Maintenance Board, enabling tenants to submit maintenance 
-requests and connect with service providers for quick resolution. Service providers can browse 
-available jobs and place bids on requests, ensuring efficient handling of repairs. 
-With a user-friendly interface and powerful backend, Living Ease empowers both tenants and 
-landlords to take control of their rental experience. By integrating all aspects of renting into one 
-app, Living Ease offers a modern, hassle-free solution. to provide a personalized and seamless user experience. Tenants receive 
-property suggestions based on their preferences and can view 
-detailed information about nearby amenities to make informed decisions. 
-The platform also incorporates a Maintenance Board, enabling tenants to submit maintenance 
-requests and connect with service providers for quick resolution. Service providers can browse 
-available jobs and place bids on requests, ensuring efficient handling of repairs. 
-With a user-friendly interface and powerful backend, Living Ease empowers both tenants and 
-landlords to take control of their rental experience. By integrating all aspects of renting into one 
-app, Living Ease offers a modern, hassle-free solution.
+**Living Ease
+Final Year Project - BS Software Engineering
+**
+**🚀 Overview**
+Living Ease is an innovative mobile application designed to transform the rental property market by addressing the challenges faced by both tenants and landlords. This app provides a unified platform for seamless property management, bridging communication gaps, and eliminating inefficiencies in the rental process.
+
+**🌟 Key Features**
+**For Tenants:**
+Property Search & Recommendations: AI-powered suggestions based on preferences and search history.
+Easy Applications: Submit rental applications and schedule property viewings in just a few clicks.
+Maintenance Board: Submit requests and connect with service providers for quick resolutions.
+**For Landlords:**
+Efficient Management: Manage listings, payments, and lease agreements effortlessly.
+Seamless Communication: Direct messaging with tenants.
+Informed Decisions: Geospatial insights and detailed information about nearby amenities.
+**For Service Providers:**
+Job Marketplace: Browse maintenance requests and place bids for repairs.
+
+**🛠️ Tech Stack**
+Frontend: React Native
+Backend: Node.js, Express.js, Flask
+Database: MongoDB
+APIs:
+Google Maps API: For displaying nearby amenities and properties.
+Stripe API: For secure payment processing, including rent payments and escrow functionality.
+
+**🌍 Why Living Ease?**
+In today’s rental market, inefficiencies and manual interventions often frustrate tenants and landlords alike. Living Ease addresses these pain points by offering:
+Personalized Experiences: Leveraging advanced AI and geospatial analysis.
+Unified Platform: Connecting tenants, landlords, and service providers.
+Time-Saving Automation: Simplified processes for listings, payments, and maintenance tasks.
+
+**🎯 Impact**
+Living Ease empowers users with a modern, hassle-free rental experience:
+Tenants can find their dream homes effortlessly.
+Landlords can optimize their property management.
+Service Providers can access a streamlined job market.
+
+**👩‍💻 Project Highlights**
+AI-Powered Property Recommendations: Tailored suggestions based on user behavior.
+Geospatial Insights: Detailed information about properties and nearby amenities.
+Maintenance Board: Efficient repair and service request handling.
+
+**📈 Conclusion**
+Living Ease redefines property management by integrating all aspects of renting into one powerful app. With a user-friendly interface, advanced features, and a robust backend, Living Ease is the ultimate solution for the modern rental market.
