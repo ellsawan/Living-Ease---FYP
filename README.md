@@ -1,3 +1,4 @@
+**Living Ease - Final Year Project - BS Software Engineering**
 In today’s rental market, the process of managing properties and handling rental tasks can be a 
 challenge for both **tenants and landlords**. Tenants often face difficulties finding suitable properties, 
 while landlords struggle to manage listings, payments, and maintenance requests. The existing 
